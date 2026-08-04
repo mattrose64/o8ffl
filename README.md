@@ -1,0 +1,103 @@
+# Original 8 Fantasy Football League — league site
+
+A static site for the O8FFL: draft history, standings, stats, keepers, waiver dollars,
+the by-laws and a pre-draft meeting brief. No build step, no framework — plain HTML, CSS
+and ES modules reading JSON that a Python script generates from the league workbook.
+
+## Updating the site each year
+
+1. Drop the new master workbook and by-laws in this folder (or in `source/`). Keep the
+   sheet naming conventions the workbook already uses:
+   - `2026 Draft` for a draft board
+   - `2025` for that season's roster/draft-detail sheet
+   - new year columns on `Standings History`, `Stats`, `Waiver Wire Dollars`
+2. Regenerate the data:
+
+```bash
+python3 scripts/build_data.py
+```
+
+3. Check the site locally:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000>. (Opening the `.html` files directly from Finder will
+not work — the pages fetch JSON, which browsers block on `file://`.)
+
+4. Commit and push. GitHub Pages redeploys automatically.
+
+```bash
+git add -A && git commit -m "Update league data" && git push
+```
+
+### The script is year-agnostic
+
+`build_data.py` discovers seasons from the sheet names, so a new `2026 Draft` tab appears
+on the site without touching any code. It prints what it found and, at the end, any owner
+spelling it could not resolve — if a new owner joins the league, add them to
+`OWNER_ALIASES` near the top of the script.
+
+Dependencies: `python3 -m pip install --user -r requirements.txt`
+
+## Layout
+
+```
+index.html …  meeting.html   one page per section
+assets/css/site.css          design system (both themes)
+assets/js/app.js             shared runtime: data loading, tables, player sheet
+assets/js/page-*.js          one module per page
+assets/rulebook/             images extracted from the by-laws
+data/*.json                  generated — do not edit by hand
+data/drafts/<year>.json      one draft board per season
+data/rosters/<year>.json     one roster/draft-detail set per season
+scripts/build_data.py        the whole pipeline
+```
+
+### Privacy
+
+The published site is public, so the build script scrubs two things on the way out. The
+source `.xlsx` and `.docx` are never modified, and they are gitignored so they stay on
+your machine.
+
+- **Surnames.** Every league member is shown by first name only. Former owners who share
+  a first name with a current one keep a last initial (`Jon F.`, `Ryan A.`) so old seasons
+  stay unambiguous. This applies to free text too — record books, draft-board notes,
+  fantasy team names and the by-laws.
+- **Email addresses.** Addresses in the by-laws are replaced with a placeholder. Run
+  `python3 scripts/build_data.py --keep-emails` if you ever want them published.
+
+NFL player names are untouched, so "Emmanuel Sanders" and "Melvin Gordon" still read
+normally.
+
+### Data files
+
+| File | What's in it |
+| --- | --- |
+| `meta.json` | league info, franchises, which years exist, per-season champions |
+| `standings.json` | season finishes + the all-time universal table and record books |
+| `stats.json` | career and per-season W/L, points, adds, trades |
+| `keepers.json` | current keeper options with cost, contract years and acquisition |
+| `players.json` | every player's draft history (year, round, owner, kept?) |
+| `waivers.json` | waiver budgets by team and season |
+| `meeting.json` | derived pre-draft brief: draft-slot order, keeper counts, carryover |
+| `rulebook.json` | the by-laws as structured sections of HTML |
+
+### Notes on the data
+
+- Franchises are tracked by team number, so seasons played by a previous owner
+  (Dan Gordon, Jon Foster, Ryan Aberdale, Tyler Moules) still line up with the current
+  owner's history.
+- Draft boards are authoritative for the round a player went in. Roster sheets number an
+  owner's picks sequentially, which drifts from the true round when picks are traded, so
+  they are only used to fill gaps and to supply keeper flags.
+- 2014 and 2015 have no draft-board tab; their boards are reconstructed from the roster
+  sheets and labelled as such on the page.
+
+## Coming later: live draft board
+
+The per-season `data/drafts/<year>.json` file is a self-contained document with the draft
+order and one entry per pick, which is exactly what a draft-day page needs: point a live
+board at the same file (regenerated or edited during the draft) and it renders with the
+existing board component.

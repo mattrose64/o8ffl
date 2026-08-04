@@ -1,0 +1,10 @@
+.DS_Store
+~$*.xlsx
+~$*.docx
+__pycache__/
+*.pyc
+.venv/
+
+# League source documents stay local — the generated JSON in data/ is what the site needs
+*.xlsx
+*.docx

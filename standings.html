@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Standings · O8FFL</title>
+<meta name="description" content="O8FFL season standings and the all-time universal table.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">O8</span>
+      <span class="brand-text">Original 8<small>Fantasy Football</small></span>
+    </a>
+    <span class="header-spacer"></span>
+    <nav class="site-nav" id="nav"></nav>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">☾</button>
+    <button class="icon-btn nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<div class="wrap page-head">
+  <p class="eyebrow">Standings</p>
+  <h1>Where everyone finished</h1>
+  <p>Season-by-season regular season and playoff results, plus the all-time universal table. Tap a column header to sort.</p>
+</div>
+
+<main class="wrap">
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="View">
+      <button id="tabSeason" class="active" type="button">By season</button>
+      <button id="tabAllTime" type="button">All-time</button>
+    </div>
+  </div>
+
+  <div id="seasonPanel">
+    <div class="pill-row" id="yearPills"></div>
+    <div id="seasonView"><div class="loading">Loading…</div></div>
+  </div>
+
+  <div id="allTimePanel" hidden>
+    <div id="allTimeView"><div class="loading">Loading…</div></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Original 8 Fantasy Football League · <span id="footYear"></span></span>
+    <span id="footStamp"></span>
+  </div>
+</footer>
+
+<script type="module" src="assets/js/page-standings.js"></script>
+</body>
+</html>

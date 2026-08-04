@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Waiver Dollars · O8FFL</title>
+<meta name="description" content="O8FFL waiver wire budgets by team and season.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">O8</span>
+      <span class="brand-text">Original 8<small>Fantasy Football</small></span>
+    </a>
+    <span class="header-spacer"></span>
+    <nav class="site-nav" id="nav"></nav>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">☾</button>
+    <button class="icon-btn nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<div class="wrap page-head">
+  <p class="eyebrow">Waiver wire</p>
+  <h1>Waiver dollars</h1>
+  <p>Season-ending budgets by team. Every owner starts at $100 and unspent money rolls over, capped at $150.</p>
+</div>
+
+<main class="wrap">
+  <div id="waiverSummary" class="section" style="margin-top:0"></div>
+  <div id="waiverTable"><div class="loading">Loading…</div></div>
+  <div id="waiverChart" class="section"></div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Original 8 Fantasy Football League · <span id="footYear"></span></span>
+    <span id="footStamp"></span>
+  </div>
+</footer>
+
+<script type="module" src="assets/js/page-waivers.js"></script>
+</body>
+</html>

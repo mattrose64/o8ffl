@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Original 8 Fantasy Football League</title>
+<meta name="description" content="Draft history, standings, stats, keepers and the rulebook for the Original 8 Fantasy Football League.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">O8</span>
+      <span class="brand-text">Original 8<small>Fantasy Football</small></span>
+    </a>
+    <span class="header-spacer"></span>
+    <nav class="site-nav" id="nav"></nav>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">☾</button>
+    <button class="icon-btn nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow" id="heroSeason">Season</p>
+    <h1>Original 8 Fantasy Football League</h1>
+    <p id="heroBlurb">Eleven seasons of drafts, standings, keepers and grudges — all in one place.</p>
+  </div>
+</section>
+
+<main class="wrap">
+  <div id="snapshot" class="section"></div>
+
+  <section class="section">
+    <div class="section-head"><h2>Explore</h2></div>
+    <div class="grid grid-3">
+      <a class="tile" href="draft.html"><span class="t-icon">🏈</span><h3>Draft History</h3><p>Every board since 2014, searchable by player or owner.</p></a>
+      <a class="tile" href="standings.html"><span class="t-icon">🏆</span><h3>Standings</h3><p>Season finishes and the all-time universal table.</p></a>
+      <a class="tile" href="stats.html"><span class="t-icon">📊</span><h3>Stats</h3><p>Career and single-season records, wins, points, trades.</p></a>
+      <a class="tile" href="keepers.html"><span class="t-icon">🔒</span><h3>Keepers</h3><p>Who's keepable, what it costs, and what they cost before.</p></a>
+      <a class="tile" href="waivers.html"><span class="t-icon">💵</span><h3>Waiver Dollars</h3><p>Budgets and rollover by team and season.</p></a>
+      <a class="tile" href="rulebook.html"><span class="t-icon">📜</span><h3>Rulebook</h3><p>The by-laws, readable on a phone.</p></a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Champions</h2>
+      <a href="standings.html" style="font-size:.85rem;color:var(--text-dim)">All standings →</a>
+    </div>
+    <div class="card" id="champions"><div class="loading">Loading…</div></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>League records</h2></div>
+    <div class="grid grid-2" id="records"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Original 8 Fantasy Football League · <span id="footYear"></span></span>
+    <span id="footStamp"></span>
+  </div>
+</footer>
+
+<script type="module" src="assets/js/page-home.js"></script>
+</body>
+</html>

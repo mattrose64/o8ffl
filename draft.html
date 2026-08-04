@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draft History · O8FFL</title>
+<meta name="description" content="Every O8FFL draft board, searchable by player and owner.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">O8</span>
+      <span class="brand-text">Original 8<small>Fantasy Football</small></span>
+    </a>
+    <span class="header-spacer"></span>
+    <nav class="site-nav" id="nav"></nav>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">☾</button>
+    <button class="icon-btn nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<div class="wrap page-head">
+  <p class="eyebrow">Draft history</p>
+  <h1 id="draftTitle">Draft boards</h1>
+  <p id="draftSub">Pick a season, then search for a player or filter to one owner. Tap any pick for that player's full draft history.</p>
+</div>
+
+<main class="wrap">
+  <div class="pill-row" id="yearPills"></div>
+
+  <div class="toolbar">
+    <div class="field"><input id="search" type="search" placeholder="Search players…" autocomplete="off" spellcheck="false"></div>
+    <select class="input" id="ownerFilter" style="flex:0 1 190px" aria-label="Filter by owner"><option value="">All owners</option></select>
+    <div class="seg" role="group" aria-label="View">
+      <button id="viewBoard" class="active" type="button">Board</button>
+      <button id="viewList" type="button">List</button>
+    </div>
+  </div>
+
+  <div id="draftMeta" class="section" style="margin-top:0"></div>
+  <div id="draftView"><div class="loading">Loading draft…</div></div>
+  <div id="draftNotes" class="section"></div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Original 8 Fantasy Football League · <span id="footYear"></span></span>
+    <span id="footStamp"></span>
+  </div>
+</footer>
+
+<script type="module" src="assets/js/page-draft.js"></script>
+</body>
+</html>
