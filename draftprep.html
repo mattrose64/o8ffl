@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draft Prep · O8FFL</title>
+<meta name="description" content="ESPN top-400 rankings crossed with O8FFL keeper costs for the 2026 draft.">
+<meta name="theme-color" content="#0a0e13">
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="stylesheet" href="assets/css/site.css?v=dd39d354\">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">O8</span>
+      <span class="brand-text">Original 8<small>Fantasy Football</small></span>
+    </a>
+    <span class="header-spacer"></span>
+    <nav class="site-nav" id="nav"></nav>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">☾</button>
+    <button class="icon-btn nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<div class="wrap page-head">
+  <p class="eyebrow">Draft prep</p>
+  <h1 id="prepTitle">2026 draft board</h1>
+  <p id="prepSub">ESPN's preseason rankings crossed with who owns each player and what he costs to keep.</p>
+</div>
+
+<main class="wrap">
+  <div id="prepSummary" class="section" style="margin-top:0"></div>
+
+  <div class="toolbar">
+    <div class="field"><input id="search" type="search" placeholder="Search players…" autocomplete="off" spellcheck="false"></div>
+    <select class="input" id="posFilter" style="flex:0 1 130px" aria-label="Filter by position"><option value="">All positions</option></select>
+    <select class="input" id="ownerFilter" style="flex:0 1 170px" aria-label="Filter by owner"><option value="">All players</option><option value="__free">Available only</option><option value="__owned">Rostered only</option></select>
+    <select class="input" id="topFilter" style="flex:0 1 150px" aria-label="How many ranks">
+      <option value="200">Top 200</option>
+      <option value="300">Top 300</option>
+      <option value="400">Top 400</option>
+    </select>
+  </div>
+
+  <div id="prepTable"><div class="loading">Loading rankings…</div></div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>Original 8 Fantasy Football League · <span id="footYear"></span></span>
+    <span id="footStamp"></span>
+  </div>
+</footer>
+
+<script type="module" src="assets/js/page-draftprep.js?v=dd39d354\"></script>
+</body>
+</html>

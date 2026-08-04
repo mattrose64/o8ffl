@@ -1,4 +1,4 @@
-import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, fail } from "./app.js?v=dd39d354";
+import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, fail } from "./app.js?v=0a01fa05";
 
 const careerView = $("#careerView");
 const seasonView = $("#seasonView");

@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=dd39d354";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=0a01fa05";
 
 const tableHost = $("#waiverTable");
 

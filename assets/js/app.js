@@ -86,9 +86,10 @@ const NAV = [
   ["standings.html", "Standings"],
   ["stats.html", "Stats"],
   ["keepers.html", "Keepers"],
+  ["draftprep.html", "Draft Prep"],
   ["waivers.html", "Waiver $"],
   ["rulebook.html", "Rulebook"],
-  ["meeting.html", "Meeting Prep"],
+  ["meeting.html", "Meeting"],
 ];
 
 function initChrome() {
@@ -170,9 +171,10 @@ export function setParam(name, value) {
  */
 export function sortable(table, rows, render, initial = null) {
   const state = { key: initial?.key ?? null, dir: initial?.dir ?? "desc" };
+  let data = rows;
 
   const apply = () => {
-    const sorted = [...rows];
+    const sorted = [...data];
     if (state.key) {
       sorted.sort((a, b) => {
         const av = a[state.key];
@@ -205,6 +207,13 @@ export function sortable(table, rows, render, initial = null) {
   });
 
   apply();
+
+  // Listeners are attached once; feed a filtered set back in with setRows and the
+  // current sort is preserved.
+  apply.setRows = (next) => {
+    data = next;
+    apply();
+  };
   return apply;
 }
 

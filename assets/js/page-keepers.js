@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=dd39d354";
+import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=0a01fa05";
 
 const view = $("#keeperView");
 

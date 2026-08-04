@@ -70,6 +70,28 @@ Contract years remaining involves one inference — the workbook never records w
 actually kept, so the script reconstructs it by finding the players taken at exactly their
 keeper cost (allowing for stacking). The review file lists what it concluded.
 
+### Draft prep rankings
+
+The draft-prep page needs ESPN's preseason ranking. It is the only part of the pipeline
+that touches the network, so it is a separate step and the result is cached:
+
+```bash
+python3 scripts/fetch_rankings.py --year 2026
+```
+
+That writes `source/espn-rankings-<year>.json`; the site build joins it to the keeper table
+to produce `data/draftprep.json`. Re-run it whenever you want fresher rankings — ESPN moves
+them through the summer.
+
+ESPN publishes standard, PPR and superflex ranks in this feed but no half-PPR list, so the
+site uses PPR (the standard rank is stored alongside if you ever want to blend the two).
+Their rank numbers also have holes in them — nothing is ranked 37-68 for 2026, while ADP
+runs straight through the gap — so the column shows the position in their ordered list and
+keeps the raw value in the JSON.
+
+Value on that page is `(keeper round x 10) - ranking`. A second-round keeper is charged 20,
+so a top-five player kept for a 2nd scores +15. Higher is better.
+
 ### Adding a season before it's in the workbook
 
 Results usually land on ESPN before they're typed into the workbook. Files in `source/`
@@ -144,6 +166,7 @@ normally.
 | `players.json` | every player's draft history (year, round, owner, kept?) |
 | `waivers.json` | waiver budgets by team and season |
 | `meeting.json` | derived pre-draft brief: draft-slot order, keeper counts, carryover |
+| `draftprep.json` | ESPN rankings joined to keeper costs, owners and value |
 | `rulebook.json` | the by-laws as structured sections of HTML |
 
 ### Notes on the data

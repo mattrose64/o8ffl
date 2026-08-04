@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import difflib
 import glob
 import hashlib
 import json
@@ -1519,6 +1520,64 @@ def build_player_index(boards, roster_years, keepers):
     return index
 
 
+def build_draft_prep(rankings, keepers, year):
+    """
+    Join ESPN's preseason ranking to the keeper table so a draft board can be read as
+    "what would this player cost me, and is he worth it".
+
+    ESPN's own rank numbers have holes in them (nothing is ranked 37-68 this year, and ADP
+    runs straight through the gap), so the published rank is the position in their ordered
+    list — ESPN's #1, #2, #3 — with their raw value kept alongside.
+
+    Value = keeper cost weighted at ten per round, minus the ranking. A second-round
+    keeper is charged 20, so a top-five player kept for a 2nd scores +15. Higher is better.
+    """
+    if not rankings:
+        return None
+
+    by_key = {}
+    for row in keepers:
+        if row.get("player_key"):
+            by_key.setdefault(row["player_key"], row)
+
+    rows = []
+    matched = 0
+    for ordinal, entry in enumerate(sorted(rankings["players"], key=lambda p: p["rank"]), start=1):
+        key = player_key(entry["player"])
+        keeper = by_key.get(key)
+        if not keeper:
+            close = difflib.get_close_matches(key, by_key.keys(), n=1, cutoff=0.9)
+            keeper = by_key[close[0]] if close else None
+        if keeper:
+            matched += 1
+        cost = keeper["cost_round"] if keeper else None
+        rows.append(
+            {
+                "rank": ordinal,
+                "rank_espn": entry["rank"],
+                "player": entry["player"],
+                "player_key": key,
+                "nfl_team": entry["nfl_team"],
+                "position": entry["position"],
+                "adp": entry.get("adp"),
+                "owner": keeper["owner"] if keeper else None,
+                "team": keeper["team"] if keeper else None,
+                "cost_round": cost,
+                "cost_label": keeper["cost_label"] if keeper else None,
+                "years_remaining": keeper["contract_years_remaining"] if keeper else None,
+                "value": (cost * 10 - ordinal) if cost else None,
+            }
+        )
+
+    return {
+        "year": year,
+        "source": rankings.get("source"),
+        "weighting": "keeper cost counts as ten points per round; value = (round x 10) - ranking",
+        "matched_to_rosters": matched,
+        "players": rows,
+    }
+
+
 def draft_order_from_standings(final_places):
     """
     By-laws 4.2: the right to pick a draft slot is handed out in this order of finish.
@@ -1694,6 +1753,17 @@ def main():
             keepers = overlay["players"]
             print(f"  keeper overlay: {overlay_year} ({len(keepers)} players)")
 
+    # ESPN rankings for the upcoming draft, cached by scripts/fetch_rankings.py.
+    rankings = None
+    if keeper_year:
+        rankings = load_overlay(f"espn-rankings-{keeper_year}.json")
+    draft_prep = build_draft_prep(rankings, keepers, keeper_year)
+    if draft_prep:
+        print(
+            f"  draft prep: {len(draft_prep['players'])} ranked players, "
+            f"{draft_prep['matched_to_rosters']} already rostered"
+        )
+
     player_index = build_player_index(list(boards.values()), roster_years, keepers)
     print(f"  player index: {len(player_index)} players")
 
@@ -1828,6 +1898,8 @@ def main():
         "players.json": {"players": player_index},
         "meeting.json": meeting,
     }
+    if draft_prep:
+        outputs["draftprep.json"] = draft_prep
     if bylaws:
         outputs["rulebook.json"] = bylaws
 
