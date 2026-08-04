@@ -249,7 +249,8 @@ class OwnerRegistry:
 # --------------------------------------------------------------------------------------
 # Player name helpers
 # --------------------------------------------------------------------------------------
-_POS_TOKEN = re.compile(r"(?<![A-Za-z/])(D/ST|DST|DEF|QB|RB|WR|TE|PK|K)(?![A-Za-z/])")
+# The lookbehind also excludes "." so initials like "J.K. Dobbins" keep their K.
+_POS_TOKEN = re.compile(r"(?<![A-Za-z/.])(D/ST|DST|DEF|QB|RB|WR|TE|PK|K)(?![A-Za-z/.])")
 _TRAILING_TEAM = re.compile(r"[,\s]+([A-Za-z]{2,4})\.?,?$")
 
 
@@ -713,10 +714,32 @@ def parse_waivers(wb, reg: OwnerRegistry):
     }
 
 
+def find_keeper_sheet(wb):
+    """
+    The keeper tab is named for the season it feeds: "2026 Eligible Keepers". Older
+    workbooks just called it "Keepers". Take the highest year present — that's the
+    upcoming season — and fall back to the bare name.
+    """
+    years = []
+    plain = None
+    for name in wb.sheetnames:
+        m = re.fullmatch(r"(\d{4})\s*(?:eligible\s*)?keepers", name.strip(), re.I)
+        if m:
+            years.append((int(m.group(1)), name))
+        elif norm_key(name) == "keepers":
+            plain = name
+    if years:
+        year, name = max(years)
+        return year, wb[name]
+    if plain:
+        return None, wb[plain]
+    return None, None
+
+
 def parse_keepers(wb, reg: OwnerRegistry):
-    ws = find_sheet(wb, "Keepers")
+    year, ws = find_keeper_sheet(wb)
     if ws is None:
-        return []
+        return year, []
 
     header_row = header_col = None
     for r in range(1, 15):
@@ -727,7 +750,7 @@ def parse_keepers(wb, reg: OwnerRegistry):
         if header_row:
             break
     if header_row is None:
-        return []
+        return year, []
 
     # Map the header labels so a re-ordered/extended sheet still parses.
     fields = {}
@@ -791,7 +814,7 @@ def parse_keepers(wb, reg: OwnerRegistry):
             }
         )
         r += 1
-    return rows
+    return year, rows
 
 
 def parse_draft_board(ws, year, reg: OwnerRegistry):
@@ -1252,6 +1275,170 @@ def parse_bylaws(path, img_dir, img_rel, shorten=None, keep_emails=False):
 
 
 # --------------------------------------------------------------------------------------
+# Overlays
+# --------------------------------------------------------------------------------------
+# A season sometimes lands before it has been typed into the workbook (results come off
+# ESPN first). Files in source/ fill those gaps. The workbook always wins: an overlay is
+# ignored the moment the same year shows up in Standings History / Stats / Waiver Wire.
+def load_overlay(name):
+    path = os.path.join(ROOT, "source", name)
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def overlay_seasons():
+    """Yield every source/season-<year>.json, oldest first."""
+    hits = []
+    for path in sorted(glob.glob(os.path.join(ROOT, "source", "season-*.json"))):
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+        if data.get("year"):
+            hits.append(data)
+    return sorted(hits, key=lambda d: d["year"])
+
+
+def apply_season_overlay(data, reg: OwnerRegistry, standings, stats, waivers):
+    """Merge one season overlay into the parsed workbook data. Returns True if applied."""
+    year = data["year"]
+    applied = False
+
+    if year not in standings and (data.get("regular_season") or data.get("playoff_final")):
+        standings[year] = {
+            "regular": [
+                {"place": e["place"], "owner": reg.owner_for_team(e["team"]), "team": e["team"]}
+                for e in sorted(data.get("regular_season", []), key=lambda e: e["place"])
+            ],
+            "playoff": [
+                {"place": e["place"], "owner": reg.owner_for_team(e["team"]), "team": e["team"]}
+                for e in sorted(data.get("playoff_final", []), key=lambda e: e["place"])
+            ],
+        }
+        for entry in standings[year]["regular"] + standings[year]["playoff"]:
+            if entry["owner"]:
+                reg.note_season(year, entry["owner"])
+        applied = True
+
+    if year not in stats["seasons"] and data.get("stats"):
+        stats["seasons"][year] = [
+            {
+                "team": row["team"],
+                "owner": reg.owner_for_team(row["team"]),
+                "wins": row.get("wins"),
+                "losses": row.get("losses"),
+                "ties": row.get("ties") or None,
+                "points_for": row.get("points_for"),
+                "points_against": row.get("points_against"),
+                "acquires": row.get("acquires"),
+                "trades": row.get("trades"),
+            }
+            for row in data["stats"]
+        ]
+        applied = True
+
+    budgets = data.get("waiver_budgets") or {}
+    if budgets and year not in waivers["years"]:
+        for team in waivers["teams"]:
+            value = budgets.get(str(team["team"]))
+            if value is not None:
+                team["budgets"][str(year)] = value
+        waivers["years"] = sorted(waivers["years"] + [year])
+        applied = True
+
+    return applied
+
+
+def augment_career(stats, universal, reg: OwnerRegistry, overlay_years):
+    """
+    Add an overlay season to the workbook's career totals rather than recomputing them.
+    The commissioner keeps those columns (and the universal points table) by hand, and a
+    from-scratch recount quietly disagrees with them on old seasons — so only ever apply
+    the delta for the season the workbook doesn't carry yet.
+    """
+    career = {row["team"]: row for row in stats["career"]}
+    for year in overlay_years:
+        for row in stats["seasons"].get(year, []):
+            entry = career.setdefault(
+                row["team"],
+                {"team": row["team"], "owner": reg.owner_for_team(row["team"]),
+                 "wins": 0, "losses": 0, "points_for": 0.0, "points_against": 0.0,
+                 "acquires": 0, "trades": 0},
+            )
+            for key in ("wins", "losses", "ties", "acquires", "trades"):
+                if row.get(key):
+                    entry[key] = (entry.get(key) or 0) + row[key]
+            for key in ("points_for", "points_against"):
+                if row.get(key):
+                    entry[key] = round((entry.get(key) or 0.0) + row[key], 2)
+
+    for entry in career.values():
+        games = (entry.get("wins") or 0) + (entry.get("losses") or 0) + (entry.get("ties") or 0)
+        if games:
+            entry["win_pct"] = round(((entry.get("wins") or 0) + (entry.get("ties") or 0) / 2) / games, 4)
+        if entry.get("points_for") is not None and entry.get("points_against") is not None:
+            entry["plus_minus"] = round(entry["points_for"] - entry["points_against"], 2)
+    stats["career"] = sorted(career.values(), key=lambda e: e["team"])
+
+
+def augment_universal(universal, standings, reg: OwnerRegistry, overlay_years):
+    """
+    Same idea for the universal table: championship 3, finals appearance 2, playoff berth
+    1, the Moules -1 — applied only to the overlay seasons, on top of the stored totals.
+    """
+    titles = {row["team"]: row for row in universal.get("titles", [])}
+    for year in overlay_years:
+        for entry in standings.get(year, {}).get("playoff", []):
+            team, place = entry["team"], entry["place"]
+            if not team:
+                continue
+            row = titles.setdefault(
+                team,
+                {"team": team, "owner": reg.owner_for_team(team), "points": 0,
+                 "championships": 0, "finalist": 0, "playoffs": 0, "trombley": 0},
+            )
+            if place == 1:
+                row["championships"] += 1
+                row["points"] += 3
+            elif place == 2:
+                row["finalist"] += 1
+                row["points"] += 2
+            if place <= 6:
+                row["playoffs"] += 1
+                row["points"] += 1
+            if place == 10:
+                row["trombley"] += 1
+                row["points"] -= 1
+    universal["titles"] = sorted(titles.values(), key=lambda r: (-(r["points"] or 0), r["team"]))
+
+    # Average finishes are a straight mean over every season on record, so those can be
+    # recomputed outright.
+    finishes = {}
+    for season in standings.values():
+        for bucket in ("regular", "playoff"):
+            for entry in season.get(bucket) or []:
+                if entry["team"]:
+                    finishes.setdefault(entry["team"], {"regular": [], "playoff": []})[bucket].append(entry["place"])
+    universal["finishes"] = sorted(
+        (
+            {
+                "team": team,
+                "owner": reg.owner_for_team(team),
+                "avg_regular": round(sum(v["regular"]) / len(v["regular"]), 4) if v["regular"] else None,
+                "avg_playoff": round(sum(v["playoff"]) / len(v["playoff"]), 4) if v["playoff"] else None,
+                "avg_combined": round(
+                    (sum(v["regular"]) + sum(v["playoff"])) / (len(v["regular"]) + len(v["playoff"])), 4
+                )
+                if (v["regular"] or v["playoff"])
+                else None,
+            }
+            for team, v in finishes.items()
+        ),
+        key=lambda r: (r["avg_combined"] if r["avg_combined"] is not None else 99),
+    )
+
+
+# --------------------------------------------------------------------------------------
 # Derived data
 # --------------------------------------------------------------------------------------
 def build_player_index(boards, roster_years, keepers):
@@ -1410,7 +1597,7 @@ def main():
     universal = parse_universal(wb, reg)
     stats = parse_stats(wb, reg)
     waivers = parse_waivers(wb, reg)
-    keepers = parse_keepers(wb, reg)
+    keeper_year, keepers = parse_keepers(wb, reg)
     print(
         f"  universal: {len(universal.get('titles', []))} teams | "
         f"stats: {len(stats['seasons'])} seasons | waivers: {len(waivers['years'])} years | "
@@ -1454,6 +1641,58 @@ def main():
                 else:
                     pick.setdefault("keeper", False)
     print(f"  draft boards: {sorted(boards)}")
+
+    # ---- overlays for seasons the workbook hasn't absorbed yet -------------------------
+    merged = []
+    for overlay in overlay_seasons():
+        if apply_season_overlay(overlay, reg, standings, stats, waivers):
+            merged.append(overlay["year"])
+    if merged:
+        augment_career(stats, universal, reg, merged)
+        augment_universal(universal, standings, reg, merged)
+        print(f"  overlay seasons merged: {merged} (career + universal totals extended)")
+
+    # Final rosters that only exist as an overlay (screenshots, not a workbook tab).
+    for path in sorted(glob.glob(os.path.join(ROOT, "source", "final-rosters-*.json"))):
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+        year = data.get("year")
+        if not year or year in roster_years:
+            continue
+        roster_years[year] = {
+            "year": year,
+            "drafts": [],
+            "rosters": [
+                {
+                    "owner": reg.owner_for_team(block["team"]),
+                    "team": block["team"],
+                    "team_name": reg.shorten_team_name(block.get("team_name")),
+                    "record": None,
+                    "players": [
+                        {
+                            "slot": slot,
+                            "player": name,
+                            "player_key": player_key(name),
+                            "nfl_team": nfl_team,
+                            "position": pos,
+                            "acquired": acq,
+                        }
+                        for slot, name, nfl_team, pos, acq in block["players"]
+                    ],
+                }
+                for block in data["teams"]
+            ],
+            "draft_index": [],
+        }
+        print(f"  final rosters overlay: {year} ({len(data['teams'])} teams)")
+
+    # Keeper table can also arrive as an overlay while the workbook tab is still empty.
+    if not keepers:
+        overlay_year = keeper_year
+        overlay = load_overlay(f"eligible-keepers-{overlay_year}.json") if overlay_year else None
+        if overlay:
+            keepers = overlay["players"]
+            print(f"  keeper overlay: {overlay_year} ({len(keepers)} players)")
 
     player_index = build_player_index(list(boards.values()), roster_years, keepers)
     print(f"  player index: {len(player_index)} players")
@@ -1530,6 +1769,7 @@ def main():
             "waivers": waivers["years"],
             "latest_completed": latest_completed,
             "upcoming": upcoming,
+            "keepers": keeper_year,
         },
         "teams": teams,
         "seasons": seasons,
@@ -1583,7 +1823,7 @@ def main():
             "career": stats["career"],
             "seasons": {str(y): v for y, v in stats["seasons"].items()},
         },
-        "keepers.json": {"players": keepers},
+        "keepers.json": {"year": keeper_year, "players": keepers},
         "waivers.json": waivers,
         "players.json": {"players": player_index},
         "meeting.json": meeting,

@@ -1,4 +1,4 @@
-import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js";
+import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js?v=dd39d354";
 
 const seasonView = $("#seasonView");
 const allTimeView = $("#allTimeView");
@@ -59,6 +59,7 @@ try {
         team: entry.team,
         wins: s.wins ?? null,
         losses: s.losses ?? null,
+        ties: s.ties ?? null,
         points_for: s.points_for ?? null,
         points_against: s.points_against ?? null,
         diff: s.points_for != null && s.points_against != null ? +(s.points_for - s.points_against).toFixed(2) : null,
@@ -68,6 +69,7 @@ try {
       };
     });
 
+    const hasTies = rows.some((r) => r.ties);
     const table = el(
       "table",
       {},
@@ -82,6 +84,7 @@ try {
           el("th", { "data-sort": "final", "data-dir": "asc" }, "Final"),
           el("th", { class: "num", "data-sort": "wins" }, "W"),
           el("th", { class: "num", "data-sort": "losses", "data-dir": "asc" }, "L"),
+          hasTies ? el("th", { class: "num", "data-sort": "ties" }, "T") : null,
           el("th", { class: "num", "data-sort": "points_for" }, "PF"),
           el("th", { class: "num", "data-sort": "points_against" }, "PA"),
           el("th", { class: "num", "data-sort": "diff" }, "+/−"),
@@ -104,6 +107,7 @@ try {
             el("td", {}, placeBadge(r.final)),
             el("td", { class: "num" }, fmt.num(r.wins)),
             el("td", { class: "num" }, fmt.num(r.losses)),
+            hasTies ? el("td", { class: "num" }, r.ties ? fmt.num(r.ties) : "—") : null,
             el("td", { class: "num" }, fmt.num(r.points_for, 2)),
             el("td", { class: "num" }, fmt.num(r.points_against, 2)),
             el(

@@ -32,6 +32,68 @@ not work — the pages fetch JSON, which browsers block on `file://`.)
 git add -A && git commit -m "Update league data" && git push
 ```
 
+### Building next year's keeper tab
+
+When the season ends, the workbook gets a new empty `<year> Eligible Keepers` tab with the
+final-roster screenshots pasted in. To turn that into a table:
+
+1. Transcribe the rosters into `source/final-rosters-<last year>.json` (same shape as the
+   2025 file — slot, player, NFL team, position, ESPN's ACQ column).
+2. Generate the table:
+
+```bash
+python3 scripts/build_keepers.py
+```
+
+That cross-references last year's draft board, the final rosters and the previous keeper
+tab, applies by-laws 6.1, and writes three things:
+
+| Output | Use |
+| --- | --- |
+| `source/eligible-keepers-<year>.json` | read straight by the site build |
+| `build/<year>-eligible-keepers.csv` | paste into the workbook tab |
+| `build/<year>-keeper-review.md` | the handful of calls worth checking |
+
+3. Optionally have the tab written into the workbook for you:
+
+```bash
+python3 scripts/write_keeper_tab.py
+```
+
+This writes a *copy* (`…-with-<year>-keepers.xlsx`) and patches only that one worksheet
+inside the file, so the workbook's live formulas, cached values and embedded screenshots
+all survive. Check the copy, then rename it over the original.
+
+**What to trust.** The keeper round cost is rule-derived and reliable: last year's round
+minus one, a 6th for a free-agent pickup, and a traded player carries his original cost.
+Contract years remaining involves one inference — the workbook never records who was
+actually kept, so the script reconstructs it by finding the players taken at exactly their
+keeper cost (allowing for stacking). The review file lists what it concluded.
+
+### Adding a season before it's in the workbook
+
+Results usually land on ESPN before they're typed into the workbook. Files in `source/`
+fill that gap and are merged by the build:
+
+- `source/season-<year>.json` — final standings, regular-season order, W/L/T, points,
+  transactions and waiver budgets
+- `source/final-rosters-<year>.json` — end-of-season rosters
+- `source/eligible-keepers-<year>.json` — generated keeper table
+
+The workbook always wins. The moment a year appears in Standings History / Stats / Waiver
+Wire Dollars, the overlay for that year is ignored, so nothing has to be deleted. Career
+totals and the universal points table are extended by the overlay rather than recomputed,
+so the hand-kept historical numbers stay exactly as the commissioner has them.
+
+### Changing the CSS or JS
+
+```bash
+python3 scripts/stamp_assets.py
+```
+
+Adds a content hash to every asset URL so browsers pick up a push immediately instead of
+serving a stale bundle. Not needed for data-only changes.
+
 ### The script is year-agnostic
 
 `build_data.py` discovers seasons from the sheet names, so a new `2026 Draft` tab appears

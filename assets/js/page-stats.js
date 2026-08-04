@@ -1,4 +1,4 @@
-import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, fail } from "./app.js";
+import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, fail } from "./app.js?v=dd39d354";
 
 const careerView = $("#careerView");
 const seasonView = $("#seasonView");
@@ -13,6 +13,7 @@ try {
     ppg: c.points_for && c.wins != null ? +(c.points_for / ((c.wins ?? 0) + (c.losses ?? 0))).toFixed(2) : null,
   }));
 
+  const careerTies = career.some((c) => c.ties);
   const careerTable = el(
     "table",
     {},
@@ -25,6 +26,7 @@ try {
         el("th", { class: "sticky-col" }, "Owner"),
         el("th", { class: "num", "data-sort": "wins" }, "W"),
         el("th", { class: "num", "data-sort": "losses", "data-dir": "asc" }, "L"),
+        careerTies ? el("th", { class: "num", "data-sort": "ties" }, "T") : null,
         el("th", { class: "num", "data-sort": "win_pct" }, "Win %"),
         el("th", { class: "num", "data-sort": "points_for" }, "Points for"),
         el("th", { class: "num", "data-sort": "points_against" }, "Points against"),
@@ -48,6 +50,7 @@ try {
           el("td", { class: "sticky-col" }, ownerDot(r.owner), r.owner),
           el("td", { class: "num" }, fmt.num(r.wins)),
           el("td", { class: "num" }, fmt.num(r.losses)),
+          careerTies ? el("td", { class: "num" }, r.ties ? fmt.num(r.ties) : "—") : null,
           el("td", { class: "num" }, fmt.pct(r.win_pct)),
           el(
             "td",
@@ -140,6 +143,7 @@ try {
       ppg: r.points_for && r.wins != null ? +(r.points_for / ((r.wins ?? 0) + (r.losses ?? 0))).toFixed(2) : null,
     }));
 
+    const seasonTies = rows.some((r) => r.ties);
     const table = el(
       "table",
       {},
@@ -152,6 +156,7 @@ try {
           el("th", { class: "sticky-col" }, "Owner"),
           el("th", { class: "num", "data-sort": "wins" }, "W"),
           el("th", { class: "num", "data-sort": "losses", "data-dir": "asc" }, "L"),
+          seasonTies ? el("th", { class: "num", "data-sort": "ties" }, "T") : null,
           el("th", { class: "num", "data-sort": "points_for" }, "PF"),
           el("th", { class: "num", "data-sort": "points_against" }, "PA"),
           el("th", { class: "num", "data-sort": "diff" }, "+/−"),
@@ -172,6 +177,7 @@ try {
             el("td", { class: "sticky-col" }, ownerDot(r.owner), r.owner),
             el("td", { class: "num" }, fmt.num(r.wins)),
             el("td", { class: "num" }, fmt.num(r.losses)),
+            seasonTies ? el("td", { class: "num" }, r.ties ? fmt.num(r.ties) : "—") : null,
             el("td", { class: "num" }, fmt.num(r.points_for, 2)),
             el("td", { class: "num" }, fmt.num(r.points_against, 2)),
             el(

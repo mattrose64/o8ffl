@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=dd39d354";
 
 const body = $("#meetingBody");
 

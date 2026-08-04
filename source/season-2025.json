@@ -1,0 +1,54 @@
+{
+  "year": 2025,
+  "source": "ESPN league standings / season stats / transaction counter / free agent budget screenshots",
+  "transcribed": "2026-08-03",
+  "note": "Overlay for a season the master workbook does not carry yet. build_data.py prefers the workbook whenever it has the year, so this file becomes a no-op once the columns are typed into Standings History / Stats / Waiver Wire Dollars.",
+  "regular_season": [
+    { "place": 1, "team": 5 },
+    { "place": 2, "team": 1 },
+    { "place": 3, "team": 3 },
+    { "place": 4, "team": 8 },
+    { "place": 5, "team": 7 },
+    { "place": 6, "team": 4 },
+    { "place": 7, "team": 6 },
+    { "place": 8, "team": 2 },
+    { "place": 9, "team": 10 },
+    { "place": 10, "team": 9 }
+  ],
+  "playoff_final": [
+    { "place": 1, "team": 1 },
+    { "place": 2, "team": 7 },
+    { "place": 3, "team": 5 },
+    { "place": 4, "team": 3 },
+    { "place": 5, "team": 10 },
+    { "place": 6, "team": 8 },
+    { "place": 7, "team": 6 },
+    { "place": 8, "team": 4 },
+    { "place": 9, "team": 9 },
+    { "place": 10, "team": 2 }
+  ],
+  "stats": [
+    { "team": 1, "wins": 9, "losses": 4, "ties": 1, "points_for": 1629.96, "points_against": 1437.58, "acquires": 34, "trades": 1 },
+    { "team": 2, "wins": 5, "losses": 9, "ties": 0, "points_for": 1325.04, "points_against": 1589.12, "acquires": 27, "trades": 0 },
+    { "team": 3, "wins": 9, "losses": 4, "ties": 1, "points_for": 1548.56, "points_against": 1443.84, "acquires": 26, "trades": 1 },
+    { "team": 4, "wins": 6, "losses": 8, "ties": 0, "points_for": 1409.04, "points_against": 1463.28, "acquires": 35, "trades": 0 },
+    { "team": 5, "wins": 11, "losses": 3, "ties": 0, "points_for": 1602.06, "points_against": 1374.66, "acquires": 31, "trades": 0 },
+    { "team": 6, "wins": 5, "losses": 9, "ties": 0, "points_for": 1423.5, "points_against": 1516.18, "acquires": 6, "trades": 0 },
+    { "team": 7, "wins": 7, "losses": 7, "ties": 0, "points_for": 1775.68, "points_against": 1627.38, "acquires": 22, "trades": 1 },
+    { "team": 8, "wins": 9, "losses": 5, "ties": 0, "points_for": 1457.04, "points_against": 1443.42, "acquires": 9, "trades": 0 },
+    { "team": 9, "wins": 4, "losses": 10, "ties": 0, "points_for": 1335.12, "points_against": 1462.26, "acquires": 29, "trades": 3 },
+    { "team": 10, "wins": 4, "losses": 10, "ties": 0, "points_for": 1478.62, "points_against": 1626.9, "acquires": 20, "trades": 2 }
+  ],
+  "waiver_budgets": {
+    "1": 65,
+    "2": 37,
+    "3": 28,
+    "4": 34,
+    "5": 57,
+    "6": 133,
+    "7": 2,
+    "8": 99,
+    "9": 0,
+    "10": 72
+  }
+}

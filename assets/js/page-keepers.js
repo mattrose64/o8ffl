@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js";
+import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=dd39d354";
 
 const view = $("#keeperView");
 
@@ -10,7 +10,7 @@ try {
   ]);
 
   const players = playersDoc.players || {};
-  const upcoming = meta.years.upcoming;
+  const keeperYear = keepersDoc.year || meta.years.keepers || meta.years.upcoming;
   const lastDraft = meta.years.latest_completed;
 
   // Decorate each keeper row with what the league has actually paid for that player.
@@ -18,7 +18,10 @@ try {
     const history = (players[k.player_key]?.history || []).filter((h) => h.round);
     const recent = history.filter((h) => h.year <= lastDraft).sort((a, b) => b.year - a.year)[0] || null;
     const best = history.length ? Math.min(...history.map((h) => h.round)) : null;
-    const value = k.cost_round && recent?.round ? k.cost_round - recent.round : null;
+    // Cost is last year's round minus one by rule, so comparing the two says nothing.
+    // What's worth surfacing is a player who costs far later than he has ever gone —
+    // usually a free-agent pickup (flat 6th) who used to be an early pick.
+    const value = k.cost_round && best ? k.cost_round - best : null;
     return { ...k, history, recent, best, value, kept: history.filter((h) => h.keeper).length };
   });
 
@@ -80,17 +83,17 @@ try {
       card("Keepable", String(rows.filter((r) => r.eligible).length), "have a listed round cost"),
       card("Contracts expiring", String(expiring.length), "must return to the pool"),
       card(
-        "Best value",
+        "Biggest bargain",
         steals[0] ? steals[0].player : "—",
-        steals[0] ? `R${steals[0].cost_round} vs R${steals[0].recent.round} market` : ""
+        steals[0] ? `costs R${steals[0].cost_round}, has gone as early as R${steals[0].best}` : ""
       )
     ),
     el(
       "p",
       { class: "notice", style: "margin-top:12px" },
       `Keeper limit is 4 per team${
-        upcoming ? ` for ${upcoming}` : ""
-      }. Cost is the round pick you surrender; free-agent pickups cost a 6th. Green rounds are cheaper than the player's most recent draft slot.`
+        keeperYear ? ` for ${keeperYear}` : ""
+      }. Cost is the round pick you surrender — one round earlier than where he went last year, or a 6th for a free-agent pickup. Green means he costs later than he has ever been drafted.`
     )
   );
 
@@ -189,6 +192,7 @@ try {
               ? `${row.contract_years_remaining} yr${row.contract_years_remaining === 1 ? "" : "s"} left`
               : null,
             row.recent ? `last drafted R${row.recent.round} in ${row.recent.year}` : "never drafted",
+            row.best && row.recent && row.best !== row.recent.round ? `best R${row.best}` : null,
           ]
             .filter(Boolean)
             .join(" · ")
@@ -206,7 +210,7 @@ try {
             )
           : null,
         row.value !== null && row.value >= 3
-          ? el("span", { class: "badge badge-green" }, `+${row.value} rds value`)
+          ? el("span", { class: "badge badge-green", title: `Costs R${row.cost_round}; has gone as early as R${row.best}` }, `bargain +${row.value}`)
           : null,
         !row.eligible ? el("span", { class: "badge badge-clay" }, row.cost_label || "Not keepable") : null,
         historySpark(row.history)
