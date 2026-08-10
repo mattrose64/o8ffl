@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=4a288984";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=2e0d27af";
 
 const snapshot = $("#snapshot");
 
@@ -79,7 +79,13 @@ try {
       "div",
       { class: "timeline" },
       ...champs.map((season) => {
-        const line = (stats.seasons[String(season.year)] || []).find((r) => r.owner === season.champion);
+        // Match the season's stat line by franchise, not by name: seasons played by a
+        // previous owner (2015's champion, say) are filed under the current owner there.
+        const championTeam = (standings.seasons[String(season.year)]?.playoff || []).find(
+          (p) => p.place === 1
+        )?.team;
+        const rows = stats.seasons[String(season.year)] || [];
+        const line = rows.find((r) => r.team === championTeam) || rows.find((r) => r.owner === season.champion);
         return el(
           "a",
           {

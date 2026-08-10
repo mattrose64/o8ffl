@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=4a288984";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=2e0d27af";
 
 const body = $("#meetingBody");
 
@@ -315,7 +315,12 @@ try {
               {},
               el("span", { style: "font-weight:800" }, m.year),
               el("span", { style: "color:var(--text-dim);font-weight:500" }, [m.date, m.place].filter(Boolean).join(" · ")),
-              m.has_minutes ? el("span", { class: "badge badge-green" }, "with minutes") : el("span", { class: "badge badge-plain" }, "agenda")
+              (() => {
+                const decisions = m.items.filter((i) => i.outcome).length;
+                return decisions
+                  ? el("span", { class: "badge badge-green" }, `${decisions} decision${decisions === 1 ? "" : "s"} recorded`)
+                  : el("span", { class: "badge badge-plain" }, "agenda only");
+              })()
             ),
             el("div", { class: "keeper-body", style: "padding:14px 16px" }, outline(m.items))
           )

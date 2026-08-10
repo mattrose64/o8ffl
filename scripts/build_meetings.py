@@ -252,8 +252,9 @@ def main():
                 "date": shorten(meta.get("date")),
                 "place": meta.get("place"),
                 "source": os.path.basename(path),
-                "has_minutes": "note" in os.path.basename(path).lower()
-                or "minute" in os.path.basename(path).lower(),
+                # A meeting has minutes if outcomes were recorded against its items —
+                # the filename doesn't always say so.
+                "has_minutes": any(i["outcome"] for i in items),
                 "items": items,
             }
         )
