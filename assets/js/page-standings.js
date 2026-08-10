@@ -1,4 +1,4 @@
-import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js?v=10723445";
+import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js?v=8f44634b";
 
 const seasonView = $("#seasonView");
 const allTimeView = $("#allTimeView");
@@ -167,7 +167,7 @@ try {
         championships: t.championships,
         finalist: t.finalist,
         playoffs: t.playoffs,
-        trombley: t.trombley,
+        moules: t.moules,
         avg_combined: f.avg_combined ?? null,
         avg_regular: f.avg_regular ?? null,
         avg_playoff: f.avg_playoff ?? null,
@@ -190,7 +190,7 @@ try {
           el("th", { class: "num", "data-sort": "championships" }, "🏆"),
           el("th", { class: "num", "data-sort": "finalist" }, "Finals"),
           el("th", { class: "num", "data-sort": "playoffs" }, "Playoffs"),
-          el("th", { class: "num", "data-sort": "trombley", "data-dir": "asc" }, "Moules"),
+          el("th", { class: "num", "data-sort": "moules", "data-dir": "asc" }, "Moules"),
           el("th", { class: "num", "data-sort": "win_pct" }, "Win %"),
           el("th", { class: "num", "data-sort": "avg_combined", "data-dir": "asc" }, "Avg finish"),
           el("th", { class: "num", "data-sort": "avg_regular", "data-dir": "asc" }, "Avg reg."),
@@ -212,7 +212,7 @@ try {
             el("td", { class: "num" }, r.championships ? el("span", { class: "badge badge-gold" }, r.championships) : "—"),
             el("td", { class: "num" }, fmt.num(r.finalist)),
             el("td", { class: "num" }, fmt.num(r.playoffs)),
-            el("td", { class: "num" }, r.trombley ? el("span", { class: "badge badge-clay" }, r.trombley) : "—"),
+            el("td", { class: "num" }, r.moules ? el("span", { class: "badge badge-clay" }, r.moules) : "—"),
             el("td", { class: "num" }, fmt.pct(r.win_pct)),
             el("td", { class: "num" }, fmt.num(r.avg_combined, 2)),
             el("td", { class: "num" }, fmt.num(r.avg_regular, 2)),

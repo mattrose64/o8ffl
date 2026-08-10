@@ -1,4 +1,4 @@
-import { $, $$, el, load, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=10723445";
+import { $, $$, el, load, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=8f44634b";
 
 const view = $("#draftView");
 const state = { year: null, board: null, query: "", owner: "", mode: "board" };

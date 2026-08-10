@@ -33,8 +33,8 @@ VOTE_RE = re.compile(
 )
 # Surnames the minutes drop on their own, which the shared redactor deliberately leaves
 # alone because they are ambiguous or collide with ordinary words. In this context they are
-# unmistakably people, so they get handled here. "Moules" and "Trombley" stay: the league
-# renamed the last-place trophy after a former owner, and it is a trophy name now.
+# unmistakably people, so they get handled here. "Moules" stays — the league renamed the
+# last-place trophy after a former owner, and it is a trophy name now.
 # People who are not league members but get named in the minutes — prospective owners
 # who were put forward for an open seat. Same rule applies: first names only.
 NON_MEMBERS = [

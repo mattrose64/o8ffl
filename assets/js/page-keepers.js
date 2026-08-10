@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=10723445";
+import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=8f44634b";
 
 const view = $("#keeperView");
 
@@ -90,7 +90,7 @@ try {
       { class: "notice", style: "margin-top:12px" },
       `Keeper limit is 4 per team${
         keeperYear ? ` for ${keeperYear}` : ""
-      }. Cost is the round pick you surrender — one round earlier than where he went last year, or a 6th for a free-agent pickup. Green means he costs later than he has ever been drafted.`
+      }. Cost is the round pick you surrender — one round earlier than where he went last year, or a 6th for a free-agent pickup. For whether that price is worth paying, see the draft prep board.`
     )
   );
 

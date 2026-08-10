@@ -80,6 +80,23 @@ FORMER_OWNERS = {
     10: [("Tyler Moules", "Tyler")],
 }
 
+# The last-place trophy was renamed from the Trombley to the Moules by league vote, so the
+# old name is retired everywhere it appears — by-laws, record books, meeting minutes. The
+# first few entries rewrite phrasings that a straight swap would turn into nonsense
+# ("change the name of the Moules trophy to the Moules trophy").
+TROPHY_FIXES = [
+    (
+        r"change the name of the Tromb(?:le|la|l)y trophy to the Moules trophy",
+        "name the last-place trophy the Moules",
+    ),
+    (r"The Tromb(?:le|la|l)y to be renamed The Moules", "The last-place trophy to be renamed The Moules"),
+    (r"Tromb(?:le|la|l)y\s*[-–]\s*Moules", "Moules"),
+    (r"Tromb(?:le|la|l)y now Moules", "Moules"),
+    (r"Moules\s*/\s*Tromb(?:le|la|l)y", "Moules"),
+    (r"New Tromb(?:le|la|l)y Name", "New trophy name"),
+    (r"\bTromb(?:le|la|l)y'?s?\b", "Moules"),
+]
+
 # Surnames safe to strip on sight in free text. Deliberately excludes ones that collide
 # with ordinary words or trophy names — "Rose", "Dooley", "Moules" (the trophy), "Foster",
 # "Gordon" — those are only replaced as part of a full name.
@@ -246,10 +263,15 @@ class OwnerRegistry:
             re.IGNORECASE,
         )
 
+        trophy = [(re.compile(p, re.I), r) for p, r in TROPHY_FIXES]
+
         def shorten(text):
             if not text or not isinstance(text, str):
                 return text
-            return pattern.sub(lambda m: replacements[m.group(1).lower()], text)
+            text = pattern.sub(lambda m: replacements[m.group(1).lower()], text)
+            for trophy_pattern, replacement in trophy:
+                text = trophy_pattern.sub(replacement, text)
+            return text
 
         self._redactor = shorten
         return shorten
@@ -512,7 +534,7 @@ def parse_universal(wb, reg: OwnerRegistry):
                 3: ("championships", "int"),
                 4: ("finalist", "int"),
                 5: ("playoffs", "int"),
-                6: ("trombley", "int"),
+                6: ("moules", "int"),
             },
         )
     finishes = []
@@ -1451,7 +1473,7 @@ def augment_universal(universal, standings, reg: OwnerRegistry, overlay_years):
             row = titles.setdefault(
                 team,
                 {"team": team, "owner": reg.owner_for_team(team), "points": 0,
-                 "championships": 0, "finalist": 0, "playoffs": 0, "trombley": 0},
+                 "championships": 0, "finalist": 0, "playoffs": 0, "moules": 0},
             )
             if place == 1:
                 row["championships"] += 1
@@ -1463,7 +1485,7 @@ def augment_universal(universal, standings, reg: OwnerRegistry, overlay_years):
                 row["playoffs"] += 1
                 row["points"] += 1
             if place == 10:
-                row["trombley"] += 1
+                row["moules"] += 1
                 row["points"] -= 1
     universal["titles"] = sorted(titles.values(), key=lambda r: (-(r["points"] or 0), r["team"]))
 
@@ -1651,7 +1673,7 @@ def draft_order_from_standings(final_places):
     preference = [
         (7, "Winner of the Consolation Bracket"),
         (8, "Runner-up of the Consolation Bracket"),
-        (9, "Winner of the Moules/Trombley Bowl"),
+        (9, "Winner of the Moules Bowl"),
         (10, "The Moules (last place)"),
         (5, "Fifth place"),
         (6, "Sixth place"),

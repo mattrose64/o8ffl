@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, sortable, openPlayer, ownerDot, fail } from "./app.js?v=10723445";
+import { $, el, load, fmt, param, setParam, sortable, openPlayer, ownerDot, fail } from "./app.js?v=8f44634b";
 
 const host = $("#prepTable");
 
