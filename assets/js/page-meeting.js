@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=2dc3c95c";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=10723445";
 
 const body = $("#meetingBody");
 
@@ -171,78 +171,91 @@ try {
       if (new RegExp(`in effect[^.]*\\b(${shortYear}\\s*/|${season})`, "i").test(blob)) {
         inEffect.push({ ...item, year: past.year });
       }
-      // A topic can't be revoted for two seasons after it was decided (2023 rule).
-      if (item.outcome && /\d\s*-\s*\d/.test(item.outcome) && past.year >= season - 2) {
-        locked.push({ ...item, year: past.year, until: past.year + 2 });
+      // A decided topic can't be raised again for two seasons (2023 meeting), and the
+      // 2025 meeting voted 10-0 to stretch that to four from 26/27 onward.
+      if (item.outcome && /\d\s*-\s*\d/.test(item.outcome)) {
+        const until = past.year + (past.year >= 2026 ? 4 : 2);
+        if (until > season) locked.push({ ...item, year: past.year, until });
       }
     }
   }
 
-  const decisionsCard =
-    inEffect.length || locked.length
-      ? el(
-          "div",
-          { class: "card" },
-          el("p", { class: "eyebrow" }, `Already decided for ${season}`),
-          inEffect.length
-            ? el(
-                "div",
+  const inEffectCard = inEffect.length
+    ? el(
+        "div",
+        { class: "card" },
+        el("p", { class: "eyebrow" }, `Rules taking effect in ${season}`),
+        el(
+          "p",
+          { style: "font-size:.87rem;color:var(--text-dim);margin-bottom:6px" },
+          "Voted at an earlier meeting, live from this season. Worth reading out before anyone relitigates them."
+        ),
+        el(
+          "ul",
+          { class: "checklist" },
+          ...inEffect.map((item) =>
+            el(
+              "li",
+              {},
+              el(
+                "span",
                 {},
-                el("p", { style: "font-weight:700;margin:0 0 6px" }, "Takes effect this season"),
                 el(
-                  "ul",
-                  { class: "checklist" },
-                  ...inEffect.map((item) =>
-                    el(
-                      "li",
-                      { title: item.outcome || "" },
-                      el(
-                        "span",
-                        {},
-                        item.text.replace(/[.\s]+$/, ""),
-                        el("span", { class: "minute-outcome" }, `voted ${item.year}`),
-                        item.outcome
-                          ? el(
-                              "span",
-                              { style: "display:block;font-size:.8rem;color:var(--text-faint);margin-top:2px" },
-                              item.outcome.length > 150 ? `${item.outcome.slice(0, 150)}…` : item.outcome
-                            )
-                          : null
-                      )
-                    )
-                  )
-                )
-              )
-            : null,
-          locked.length
-            ? el(
-                "details",
-                { style: "margin-top:10px" },
-                el(
-                  "summary",
-                  { style: "cursor:pointer;font-weight:700" },
-                  `${locked.length} topic${locked.length === 1 ? "" : "s"} locked from a revote`
+                  "span",
+                  { style: "font-weight:650" },
+                  item.text.replace(/[.\s]+$/, ""),
+                  el("span", { class: "minute-outcome" }, `voted ${item.year}`)
                 ),
-                el(
-                  "ul",
-                  { class: "checklist", style: "margin-top:8px" },
-                  ...locked.map((item) =>
-                    el(
-                      "li",
-                      { title: item.outcome || "" },
-                      el("span", {}, item.text.replace(/[.\s]+$/, ""), el("span", { class: "minute-outcome" }, `until ${item.until}`))
-                    )
-                  )
-                ),
-                el(
-                  "p",
-                  { style: "font-size:.8rem;color:var(--text-faint);margin:8px 0 0" },
-                  "Once voted, an item can't be revoted for two seasons (2023 meeting)."
-                )
+                item.outcome
+                  ? el("span", { style: "display:block;color:var(--text-dim);margin-top:3px" }, item.outcome)
+                  : null
               )
-            : null
+            )
+          )
         )
-      : null;
+      )
+    : null;
+
+  const lockedCard = locked.length
+    ? el(
+        "div",
+        { class: "card" },
+        el("p", { class: "eyebrow" }, "Locked from a revote"),
+        el(
+          "p",
+          { style: "font-size:.87rem;color:var(--text-dim);margin-bottom:6px" },
+          "Once an item is voted it can't be raised again for two seasons. From this season " +
+            "on that stretches to four, unless a super majority carries it (2025 meeting, 10-0)."
+        ),
+        el(
+          "ul",
+          { class: "checklist" },
+          ...locked.map((item) =>
+            el(
+              "li",
+              {},
+              el(
+                "span",
+                {},
+                el(
+                  "span",
+                  { style: "font-weight:650" },
+                  item.text.replace(/[.\s]+$/, ""),
+                  el("span", { class: "minute-outcome" }, `open again in ${item.until}`)
+                ),
+                item.outcome
+                  ? el(
+                      "span",
+                      { style: "display:block;color:var(--text-dim);margin-top:3px" },
+                      item.outcome.length > 220 ? `${item.outcome.slice(0, 220)}…` : item.outcome
+                    )
+                  : null
+              )
+            )
+          )
+        )
+      )
+    : null;
 
   /* ---- past meetings ---- */
   const meetings = archive?.meetings || [];
@@ -272,7 +285,10 @@ try {
   body.replaceChildren(
     // Run the meeting top to bottom: what to do, what's already settled, then the
     // numbers you need in the room, then the archive to answer "what did we decide?".
-    el("div", { class: "grid grid-2" }, agendaCard, decisionsCard),
+    // Agenda and the two rule blocks run full width — their lines are long.
+    el("div", { class: "section" }, agendaCard),
+    inEffectCard ? el("div", { class: "section" }, inEffectCard) : null,
+    lockedCard ? el("div", { class: "section" }, lockedCard) : null,
     el("div", { class: "grid grid-2" }, orderCard, waiverCard),
     archiveCard,
     el("div", { class: "grid grid-2" }, standingsCard, rulesCard)

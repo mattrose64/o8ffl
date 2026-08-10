@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=2dc3c95c";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=10723445";
 
 const snapshot = $("#snapshot");
 

@@ -49,6 +49,30 @@ BARE_SURNAMES = [
     (re.compile(r"\bCronin'?s?\b"), "Shawn"),
 ]
 
+# Corrections applied on the way out. The source documents are never modified; each entry
+# records what it fixes and why.
+TEXT_FIXES = [
+    # 2025 minutes: the vote replaced the kicker slot with a flex, not another kicker.
+    # By-laws 4.1 states it plainly: "kickers will be removed and an additional flex spot
+    # will be added".
+    (
+        re.compile(r"removing kickers in favou?r of an additional kicker", re.I),
+        "removing kickers in favor of an additional flex",
+    ),
+]
+
+# "Player positions" reads as though roster construction as a whole is settled. The vote
+# was specifically about kickers, and roster construction stays open — so the item is
+# retitled wherever its outcome is actually about kickers. Earlier meetings that genuinely
+# ranged across 2QB, extra flex and defensive players keep their original heading.
+def retitle(text, outcome):
+    if re.fullmatch(r"player positions\.?", (text or "").strip(), re.I) and re.search(
+        r"kicker", outcome or "", re.I
+    ):
+        return "Kicker removal"
+    return text
+
+
 # Boilerplate from the PDF exports.
 NOISE = re.compile(r"^(svb confidential|page \d+|original 8 fantasy football)", re.I)
 
@@ -168,9 +192,12 @@ def split_outcome(text):
     for sep in ("–", "-"):
         idx = text.rfind(sep)
         while idx > 0:
-            head, tail = text[:idx].strip(" -–"), text[idx + 1 :].strip()
-            if tail and VOTE_RE.search(tail) and len(tail) < 700 and head:
-                return head, tail
+            # Never split inside a vote tally: "Voted 10-0" is one number, not a boundary.
+            between_digits = text[idx - 1].isdigit() and idx + 1 < len(text) and text[idx + 1].isdigit()
+            if not between_digits:
+                head, tail = text[:idx].strip(" -–"), text[idx + 1 :].strip()
+                if tail and VOTE_RE.search(tail) and len(tail) < 700 and head:
+                    return head, tail
             idx = text.rfind(sep, 0, idx)
     return text, None
 
@@ -182,7 +209,7 @@ def main():
     def shorten(text):
         text = base(text)
         if text:
-            for pattern, replacement in NON_MEMBERS + BARE_SURNAMES:
+            for pattern, replacement in NON_MEMBERS + BARE_SURNAMES + TEXT_FIXES:
                 text = pattern.sub(replacement, text)
         return text
 
@@ -209,11 +236,12 @@ def main():
         for node in nodes:
             text, outcome = split_outcome(node["text"])
             outcome = node.get("outcome") or outcome
+            clean_outcome = shorten(outcome) if outcome else None
             items.append(
                 {
                     "level": min(node["level"], 3),
-                    "text": shorten(text),
-                    "outcome": shorten(outcome) if outcome else None,
+                    "text": retitle(shorten(text), clean_outcome),
+                    "outcome": clean_outcome,
                     "is_vote": bool(VOTE_RE.search(node["text"])),
                 }
             )
