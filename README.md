@@ -98,7 +98,11 @@ Results usually land on ESPN before they're typed into the workbook. Files in `s
 fill that gap and are merged by the build:
 
 - `source/season-<year>.json` — final standings, regular-season order, W/L/T, points,
-  transactions and waiver budgets
+  transactions and end-of-season waiver money
+- `source/waiver-end-of-season.json` — leftover budgets transcribed from the screenshots
+  in the workbook, used to roll each season's starting budget forward
+- `source/meetings/` — the owners' meeting agendas and minutes (.docx / .pdf), parsed by
+  `scripts/build_meetings.py`
 - `source/final-rosters-<year>.json` — end-of-season rosters
 - `source/eligible-keepers-<year>.json` — generated keeper table
 
@@ -168,8 +172,15 @@ normally.
 | `meeting.json` | derived pre-draft brief: draft-slot order, keeper counts, carryover |
 | `draftprep.json` | ESPN rankings joined to keeper costs, owners and value |
 | `rulebook.json` | the by-laws as structured sections of HTML |
+| `meetings.json` | every owners' meeting agenda and its minutes, as a nested outline |
 
 ### Notes on the data
+
+- Waiver dollars in the workbook are *starting* budgets: $100 plus what was left at the
+  end of the season before, capped. The columns are right through 2023 — end-of-2022
+  leftovers reproduce the 2023 column exactly — but the last column is headed 2024 while
+  holding the 2025 figures, so 2024 onward are computed from the end-of-season
+  screenshots instead.
 
 - Franchises are tracked by team number, so seasons played by a previous owner
   (Dan Gordon, Jon Foster, Ryan Aberdale, Tyler Moules) still line up with the current

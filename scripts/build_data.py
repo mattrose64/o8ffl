@@ -1354,26 +1354,55 @@ def apply_season_overlay(data, reg: OwnerRegistry, standings, stats, waivers):
         ]
         applied = True
 
-    # The workbook's yearly columns are what each owner STARTS a season with: $100 plus
-    # whatever they didn't spend last year, capped at $150 (by-laws 6.3). ESPN only tells
-    # us what was left at the end, so that rolls forward into the next season's start.
     remaining = data.get("waiver_remaining") or data.get("waiver_budgets") or {}
     if remaining:
         waivers.setdefault("remaining", {})[str(year)] = {
             str(team): value for team, value in remaining.items()
         }
-        next_year = year + 1
-        cap = waivers.get("cap") or 150
-        if next_year not in waivers["years"]:
-            for team in waivers["teams"]:
-                left = remaining.get(str(team["team"]))
-                if left is not None:
-                    team["budgets"][str(next_year)] = min(cap, 100 + left)
-            waivers["years"] = sorted(waivers["years"] + [next_year])
-            waivers.setdefault("derived_years", []).append(next_year)
         applied = True
 
     return applied
+
+
+def roll_waivers_forward(waivers):
+    """
+    The workbook's yearly columns are starting budgets: $100 plus whatever was left at the
+    end of the season before, capped (by-laws 6.3).
+
+    Wherever we have end-of-season numbers, compute the next season's start from them
+    rather than reading the sheet. That matters for the tail of the series: the workbook's
+    last column is headed 2024 but its values are exactly $100 + the end-of-2024 leftovers,
+    so it is really the 2025 starting budget, and the true 2024 column was never recorded.
+    """
+    overlay = load_overlay("waiver-end-of-season.json") or {}
+    remaining = dict(overlay.get("remaining") or {})
+    remaining.update(waivers.get("remaining") or {})
+    if not remaining:
+        return
+    waivers["remaining"] = remaining
+
+    caps = overlay.get("cap_by_year") or {}
+    default_cap = caps.get("default") or waivers.get("cap") or 150
+
+    computed = []
+    for year_str, leftovers in sorted(remaining.items()):
+        season = int(year_str) + 1
+        cap = caps.get(str(season), default_cap)
+        for team in waivers["teams"]:
+            left = leftovers.get(str(team["team"]))
+            if left is not None:
+                team["budgets"][str(season)] = min(cap, 100 + left)
+        computed.append(season)
+
+    # The computed values simply overwrite the sheet's last (mislabelled) column, so
+    # nothing needs removing — 2023 and earlier are read from the workbook as-is.
+    waivers["years"] = sorted(set(waivers["years"]) | set(computed))
+    waivers["computed_years"] = sorted(computed)
+    waivers["cap_by_year"] = caps
+    waivers["note"] = (
+        "Starting budget is $100 plus what was left at the end of the season before, "
+        f"capped at ${caps.get(str(max(computed)), default_cap)}."
+    )
 
 
 def augment_career(stats, universal, reg: OwnerRegistry, overlay_years):
@@ -1758,6 +1787,8 @@ def main():
     for overlay in overlay_seasons():
         if apply_season_overlay(overlay, reg, standings, stats, waivers):
             merged.append(overlay["year"])
+    roll_waivers_forward(waivers)
+
     if merged:
         augment_career(stats, universal, reg, merged)
         augment_universal(universal, standings, reg, merged)
@@ -1910,11 +1941,14 @@ def main():
         "final_standings": [
             {"place": p, "owner": o} for p, o in sorted(latest_final.items()) if o
         ],
-        "waiver_carryover": [
+        "waiver_budgets": [
             {
                 "team": t["team"],
                 "owner": t["owner"],
-                "budget": t["budgets"].get(str(latest_completed)) if latest_completed else None,
+                "budget": t["budgets"].get(str(upcoming)) if upcoming else None,
+                "left_over": (waivers.get("remaining", {}).get(str(latest_completed), {}) or {}).get(
+                    str(t["team"])
+                ),
             }
             for t in waivers["teams"]
         ],

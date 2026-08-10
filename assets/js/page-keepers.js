@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=705f2550";
+import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=2dc3c95c";
 
 const view = $("#keeperView");
 
@@ -70,10 +70,7 @@ try {
   });
 
   const expiring = rows.filter((r) => r.contract_years_remaining === 0);
-  const steals = rows
-    .filter((r) => r.eligible && r.value !== null && r.value >= 3)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 3);
+  const cheapest = rows.filter((r) => r.eligible && r.cost_round).sort((a, b) => b.cost_round - a.cost_round)[0];
 
   $("#keeperSummary").replaceChildren(
     el(
@@ -83,9 +80,9 @@ try {
       card("Keepable", String(rows.filter((r) => r.eligible).length), "have a listed round cost"),
       card("Contracts expiring", String(expiring.length), "must return to the pool"),
       card(
-        "Biggest bargain",
-        steals[0] ? steals[0].player : "—",
-        steals[0] ? `costs R${steals[0].cost_round}, has gone as early as R${steals[0].best}` : ""
+        "Latest-round keeper",
+        cheapest ? cheapest.player : "—",
+        cheapest ? `${cheapest.owner} keeps him for a round ${cheapest.cost_round}` : ""
       )
     ),
     el(
@@ -159,11 +156,10 @@ try {
   }
 
   function playerRow(row) {
-    const tier = row.value === null ? "" : row.value >= 3 ? " tier-value" : row.value <= -1 ? " tier-elite" : "";
     return el(
       "div",
       {
-        class: `kp${tier}`,
+        class: "kp",
         onclick: () => openPlayer(row.player, { position: row.position }),
         role: "button",
         tabindex: "0",
@@ -213,9 +209,6 @@ try {
               { class: "badge badge-gold", title: `Kept as a keeper in ${row.kept} season(s), by any owner` },
               `Kept ×${row.kept}`
             )
-          : null,
-        row.value !== null && row.value >= 3
-          ? el("span", { class: "badge badge-green", title: `Costs R${row.cost_round}; has gone as early as R${row.best}` }, `bargain +${row.value}`)
           : null,
         !row.eligible ? el("span", { class: "badge badge-clay" }, row.cost_label || "Not keepable") : null
       )

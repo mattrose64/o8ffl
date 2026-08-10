@@ -35,6 +35,13 @@ VOTE_RE = re.compile(
 # alone because they are ambiguous or collide with ordinary words. In this context they are
 # unmistakably people, so they get handled here. "Moules" and "Trombley" stay: the league
 # renamed the last-place trophy after a former owner, and it is a trophy name now.
+# People who are not league members but get named in the minutes — prospective owners
+# who were put forward for an open seat. Same rule applies: first names only.
+NON_MEMBERS = [
+    (re.compile(r"\bMark\s+Triscuit\s+Gambon\b"), "Mark T."),
+    (re.compile(r"\bTJ\s+Kane\b"), "TJ"),
+]
+
 BARE_SURNAMES = [
     (re.compile(r"\bDooley'?s?\b"), "Chris/Brian"),   # two Dooleys — can't tell which
     (re.compile(r"\bRose'?s?\b"), "Matt"),
@@ -162,7 +169,7 @@ def split_outcome(text):
         idx = text.rfind(sep)
         while idx > 0:
             head, tail = text[:idx].strip(" -–"), text[idx + 1 :].strip()
-            if tail and VOTE_RE.search(tail) and len(tail) < 320 and head:
+            if tail and VOTE_RE.search(tail) and len(tail) < 700 and head:
                 return head, tail
             idx = text.rfind(sep, 0, idx)
     return text, None
@@ -175,7 +182,7 @@ def main():
     def shorten(text):
         text = base(text)
         if text:
-            for pattern, replacement in BARE_SURNAMES:
+            for pattern, replacement in NON_MEMBERS + BARE_SURNAMES:
                 text = pattern.sub(replacement, text)
         return text
 

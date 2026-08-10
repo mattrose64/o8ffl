@@ -1,0 +1,28 @@
+{
+  "source": "Free Agent Budget screenshots embedded in the 'Waiver Wire Dollars' workbook tab",
+  "transcribed": "2026-08-04",
+  "note": [
+    "What each owner had LEFT when the season ended. The starting budget for the next",
+    "season is $100 plus that leftover, capped (by-laws 6.3).",
+    "",
+    "The workbook's yearly columns are starting budgets and are correct through 2023 —",
+    "end-of-2022 leftovers reproduce the 2023 column exactly for all ten teams. The last",
+    "column is mislabelled: it is headed 2024 but its values are exactly $100 + the",
+    "end-of-2024 leftovers, i.e. the 2025 starting budget. So 2024, 2025 and 2026 are",
+    "computed here instead of read from the sheet.",
+    "",
+    "Caps: several teams sit at exactly $200 in 2019-2022, so the ceiling was $200 then.",
+    "The 2025 owners' meeting set it to $150 ('$150 is now the max starting position')."
+  ],
+  "cap_by_year": { "default": 200, "2025": 150, "2026": 150 },
+  "remaining": {
+    "2023": {
+      "1": 100, "2": 16, "3": 53, "4": 45, "5": 37,
+      "6": 114, "7": 2, "8": 83, "9": 0, "10": 47
+    },
+    "2024": {
+      "1": 130, "2": 71, "3": 22, "4": 5, "5": 28,
+      "6": 69, "7": 7, "8": 92, "9": 14, "10": 50
+    }
+  }
+}
