@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, sortable, openPlayer, ownerDot, fail } from "./app.js?v=2e0d27af";
+import { $, el, load, fmt, param, setParam, sortable, openPlayer, ownerDot, fail } from "./app.js?v=bb7283a2";
 
 const host = $("#prepTable");
 
@@ -143,6 +143,12 @@ try {
   };
 
   host.replaceChildren(
+    el(
+      "p",
+      { class: "notice", style: "margin-bottom:12px" },
+      "ESPN still ranks kickers. The league voted them out of the starting lineup for 2026 " +
+        "in favour of another flex, so treat the K rows accordingly."
+    ),
     el("p", { id: "prepShowing", class: "eyebrow", style: "margin-bottom:8px" }),
     el("div", { class: "table-wrap" }, table)
   );

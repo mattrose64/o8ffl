@@ -1420,6 +1420,16 @@ def roll_waivers_forward(waivers):
     # nothing needs removing — 2023 and earlier are read from the workbook as-is.
     waivers["years"] = sorted(set(waivers["years"]) | set(computed))
     waivers["computed_years"] = sorted(computed)
+
+    # The workbook only totals the columns it carries. Recompute across every season so
+    # the first year and the derived ones aren't left blank.
+    totals = {}
+    for year in waivers["years"]:
+        values = [t["budgets"].get(str(year)) for t in waivers["teams"]]
+        values = [v for v in values if v is not None]
+        if len(values) == len(waivers["teams"]):
+            totals[str(year)] = round(sum(values), 2)
+    waivers["totals"] = totals
     waivers["cap_by_year"] = caps
     waivers["note"] = (
         "Starting budget is $100 plus what was left at the end of the season before, "

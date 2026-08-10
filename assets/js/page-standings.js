@@ -1,4 +1,4 @@
-import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js?v=2e0d27af";
+import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js?v=bb7283a2";
 
 const seasonView = $("#seasonView");
 const allTimeView = $("#allTimeView");
@@ -33,11 +33,13 @@ try {
     $("#seasonPanel").hidden = !isSeason;
     $("#allTimePanel").hidden = isSeason;
     setParam("tab", isSeason ? "season" : null);
+    if (!isSeason) setParam("year", null); // a year in the URL would reopen the season view
   };
   tabSeason.addEventListener("click", () => showTab("season"));
   tabAll.addEventListener("click", () => showTab("alltime"));
-  // All-time is the default view; ?tab=season opens a single year.
-  showTab(param("tab") === "season" ? "season" : "alltime");
+  // All-time is the default view, but a link that names a year — from the champions list,
+  // or a shared URL — means that season.
+  showTab(param("tab") === "season" || (param("tab") !== "alltime" && param("year")) ? "season" : "alltime");
 
   function pick(y) {
     year = y;
