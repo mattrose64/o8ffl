@@ -83,9 +83,10 @@ That writes `source/espn-rankings-<year>.json`; the site build joins it to the k
 to produce `data/draftprep.json`. Re-run it whenever you want fresher rankings — ESPN moves
 them through the summer.
 
-ESPN publishes standard, PPR and superflex ranks in this feed but no half-PPR list, so the
-site uses PPR (the standard rank is stored alongside if you ever want to blend the two).
-Their rank numbers also have holes in them — nothing is ranked 37-68 for 2026, while ADP
+ESPN publishes standard, PPR and superflex ranks in this feed but no half-PPR list. The
+league plays half-point PPR (2025 minutes, item 6), so the site averages the standard and
+full-PPR ranks — the two systems half-PPR sits between — and re-ranks off that. Both
+original ranks stay in the JSON. ESPN's rank numbers also have holes in them — nothing is ranked 37-68 for 2026, while ADP
 runs straight through the gap — so the column shows the position in their ordered list and
 keeps the raw value in the JSON.
 
