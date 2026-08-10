@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=8f44634b";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=4a288984";
 
 const body = $("#meetingBody");
 
@@ -123,14 +123,43 @@ try {
       "ul",
       { class: "checklist" },
       ...[
-        `Set the draft date and venue — ${lastSeason.moules || "the Moules holder"} owes $50 of food and drink`,
-        "Set the keeper deadline: one week before the draft",
-        "Collect league fees — due on or before draft day, or the team auto-drafts",
-        "Confirm the rule changes already voted in for this season (below)",
-        "Take new proposals, then vote — a proposer or co-signer must be in the room",
-        "Run the draft-slot selection in the order listed below",
-        "Confirm starting waiver budgets",
-      ].map((item) => el("li", {}, item))
+        { text: `Set the draft date and venue — ${lastSeason.moules || "the Moules holder"} owes $50 of food and drink` },
+        { text: "Set the keeper deadline: one week before the draft" },
+        { text: "Collect league fees — due on or before draft day, or the team auto-drafts" },
+        { text: "Confirm the rule changes already voted in for this season (below)" },
+        {
+          // Quick rule calls first, then the item that needs real discussion and travel
+          // planning — so it can run long without squeezing everything else.
+          text: "Take new proposals, then vote — a proposer or co-signer must be in the room",
+          sub: [
+            "Formalize the trade deadline",
+            "Increase the Moules punishment from $50 to $100",
+            "Memorialize the shotgun mid draft",
+            "2027 Destination Draft",
+          ],
+          note: "all proposed by Ryan so far",
+        },
+        { text: "Run the draft-slot selection in the order listed below" },
+        { text: "Confirm starting waiver budgets" },
+      ].map((item) =>
+        el(
+          "li",
+          {},
+          el(
+            "span",
+            {},
+            item.text,
+            item.note ? el("span", { class: "minute-outcome" }, item.note) : null,
+            item.sub
+              ? el(
+                  "ul",
+                  { class: "rb-list", style: "margin:6px 0 0" },
+                  ...item.sub.map((line) => el("li", { style: "color:var(--text-dim)" }, line))
+                )
+              : null
+          )
+        )
+      )
     )
   );
 
@@ -171,10 +200,12 @@ try {
       if (new RegExp(`in effect[^.]*\\b(${shortYear}\\s*/|${season})`, "i").test(blob)) {
         inEffect.push({ ...item, year: past.year });
       }
-      // A decided topic can't be raised again for two seasons (2023 meeting), and the
-      // 2025 meeting voted 10-0 to stretch that to four from 26/27 onward.
-      if (item.outcome && /\d\s*-\s*\d/.test(item.outcome)) {
-        const until = past.year + (past.year >= 2026 ? 4 : 2);
+      // A decided topic is closed for four years, counted from the meeting that voted it.
+      // Anything that genuinely needs revisiting sooner takes a super majority.
+      // A tally is two small numbers ("7-3"). Bounded so a season like "2023-2024"
+      // doesn't read as one — that item was explicitly exempted from the lock anyway.
+      if (item.outcome && /\b\d{1,2}\s*-\s*\d{1,2}\b/.test(item.outcome)) {
+        const until = past.year + 4;
         if (until > season) locked.push({ ...item, year: past.year, until });
       }
     }
@@ -224,36 +255,46 @@ try {
         el(
           "p",
           { style: "font-size:.87rem;color:var(--text-dim);margin-bottom:6px" },
-          "Once an item is voted it can't be raised again for two seasons. From this season " +
-            "on that stretches to four, unless a super majority carries it (2025 meeting, 10-0)."
+          "Four years from the meeting that voted it (2025 meeting, 10-0). Anything that really " +
+            "needs revisiting before then takes a super majority."
         ),
-        el(
-          "ul",
-          { class: "checklist" },
-          ...locked.map((item) =>
+        ...[...new Set(locked.map((i) => i.year))]
+          .sort((a, b) => b - a)
+          .map((votedYear) =>
             el(
-              "li",
-              {},
+              "div",
+              { style: "margin-top:10px" },
               el(
-                "span",
-                {},
-                el(
-                  "span",
-                  { style: "font-weight:650" },
-                  item.text.replace(/[.\s]+$/, ""),
-                  el("span", { class: "minute-outcome" }, `open again in ${item.until}`)
-                ),
-                item.outcome
-                  ? el(
-                      "span",
-                      { style: "display:block;color:var(--text-dim);margin-top:3px" },
-                      item.outcome.length > 220 ? `${item.outcome.slice(0, 220)}…` : item.outcome
+                "p",
+                { class: "eyebrow", style: "margin-bottom:4px" },
+                `Voted ${votedYear} — open again in ${votedYear + 4}`
+              ),
+              el(
+                "ul",
+                { class: "checklist" },
+                ...locked
+                  .filter((i) => i.year === votedYear)
+                  .map((item) =>
+                    el(
+                      "li",
+                      {},
+                      el(
+                        "span",
+                        {},
+                        el("span", { style: "font-weight:650" }, item.text.replace(/[.\s]+$/, "")),
+                        item.outcome
+                          ? el(
+                              "span",
+                              { style: "display:block;color:var(--text-dim);margin-top:3px" },
+                              item.outcome.length > 220 ? `${item.outcome.slice(0, 220)}…` : item.outcome
+                            )
+                          : null
+                      )
                     )
-                  : null
+                  )
               )
             )
           )
-        )
       )
     : null;
 
