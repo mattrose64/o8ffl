@@ -1,13 +1,14 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=0a01fa05";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=705f2550";
 
 const body = $("#meetingBody");
 
 try {
-  const [meta, meeting, waivers, book] = await Promise.all([
+  const [meta, meeting, waivers, book, archive] = await Promise.all([
     load("meta.json"),
     load("meeting.json"),
     load("waivers.json"),
     load("rulebook.json").catch(() => null),
+    load("meetings.json").catch(() => null),
   ]);
 
   const season = meeting.season;
@@ -145,7 +146,7 @@ try {
   const waiverCard = el(
     "div",
     { class: "card" },
-    el("p", { class: "eyebrow" }, `Waiver dollars carried out of ${last}`),
+    el("p", { class: "eyebrow" }, `${season} starting waiver budgets`),
     ...carry.map((row) =>
       el(
         "div",
@@ -159,7 +160,11 @@ try {
         el("span", { class: "num", style: "text-align:right;font-size:.85rem;font-weight:700" }, fmt.money(row.budget))
       )
     ),
-    waivers.note ? el("p", { style: "font-size:.8rem;color:var(--text-faint);margin:8px 0 0" }, waivers.note) : null
+    el(
+      "p",
+      { style: "font-size:.8rem;color:var(--text-faint);margin:8px 0 0" },
+      `$100 plus what was left at the end of ${last}${waivers.cap ? `, capped at $${waivers.cap}` : ""}.`
+    )
   );
 
   /* ---- agenda ---- */
@@ -207,12 +212,70 @@ try {
       )
     : null;
 
+  /* ---- past meetings ---- */
+  const meetings = archive?.meetings || [];
+  const archiveCard = meetings.length
+    ? el(
+        "div",
+        { class: "section" },
+        el("div", { class: "section-head" }, el("h2", {}, "Past meetings"),
+          el("span", { style: "font-size:.85rem;color:var(--text-dim)" }, `${meetings[meetings.length - 1].year}–${meetings[0].year}`)),
+        ...meetings.map((m, i) =>
+          el(
+            "details",
+            { class: "keeper-team", open: i === 0 || undefined },
+            el(
+              "summary",
+              {},
+              el("span", { style: "font-weight:800" }, m.year),
+              el("span", { style: "color:var(--text-dim);font-weight:500" }, [m.date, m.place].filter(Boolean).join(" · ")),
+              m.has_minutes ? el("span", { class: "badge badge-green" }, "with minutes") : el("span", { class: "badge badge-plain" }, "agenda")
+            ),
+            el("div", { class: "keeper-body", style: "padding:14px 16px" }, outline(m.items))
+          )
+        )
+      )
+    : null;
+
   body.replaceChildren(
     el("div", { class: "grid grid-2" }, orderCard, standingsCard),
     el("div", { class: "section" }, keeperCard),
     el("div", { class: "grid grid-2" }, waiverCard, agendaCard),
-    rulesCard ? el("div", { class: "section" }, rulesCard) : null
+    rulesCard ? el("div", { class: "section" }, rulesCard) : null,
+    archiveCard
   );
+
+/** Render a meeting's flat level/text list back into nested lists. */
+function outline(items) {
+  const root = el("div", { class: "minutes" });
+  const stack = [root];
+  let lastLevel = -1;
+  for (const item of items) {
+    const level = Math.min(item.level, 3);
+    while (level > lastLevel) {
+      const list = el("ul", { class: "rb-list" });
+      (stack[stack.length - 1].lastElementChild?.tagName === "LI"
+        ? stack[stack.length - 1].lastElementChild
+        : stack[stack.length - 1]
+      ).append(list);
+      stack.push(list);
+      lastLevel++;
+    }
+    while (level < lastLevel) {
+      stack.pop();
+      lastLevel--;
+    }
+    stack[stack.length - 1].append(
+      el(
+        "li",
+        { class: item.level === 0 ? "minute-head" : "" },
+        item.text,
+        item.outcome ? el("span", { class: "minute-outcome" }, item.outcome) : null
+      )
+    );
+  }
+  return root;
+}
 } catch (err) {
   fail(body, err);
 }

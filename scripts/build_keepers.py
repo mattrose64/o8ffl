@@ -387,6 +387,11 @@ def main():
         json.dump(
             {
                 "year": year,
+                # Who was kept in the season just gone, so the draft board can flag them.
+                "prior_keepers": [
+                    {"team": p["team"], "player": p["player"], "player_key": p["key"], "round": p["round"]}
+                    for p in sorted(kept_keys.values(), key=lambda p: (p["team"], p["round"]))
+                ],
                 "generated_from": {
                     "draft": f"{prior} Draft tab",
                     "rosters": f"source/final-rosters-{prior}.json",

@@ -39,7 +39,8 @@
     { "team": 9, "wins": 4, "losses": 10, "ties": 0, "points_for": 1335.12, "points_against": 1462.26, "acquires": 29, "trades": 3 },
     { "team": 10, "wins": 4, "losses": 10, "ties": 0, "points_for": 1478.62, "points_against": 1626.9, "acquires": 20, "trades": 2 }
   ],
-  "waiver_budgets": {
+  "_waiver_note": "These are END-of-season remaining budgets from ESPN. The workbook's yearly columns are STARTING budgets, so the build rolls these into the next season's start: min(150, 100 + leftover).",
+  "waiver_remaining": {
     "1": 65,
     "2": 37,
     "3": 28,

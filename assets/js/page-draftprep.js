@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, sortable, openPlayer, ownerDot, fail } from "./app.js?v=0a01fa05";
+import { $, el, load, fmt, param, setParam, sortable, openPlayer, ownerDot, fail } from "./app.js?v=705f2550";
 
 const host = $("#prepTable");
 
@@ -15,9 +15,9 @@ try {
 
   $("#prepTitle").textContent = `${prep.year} draft board`;
   $("#prepSub").textContent =
-    `ESPN's preseason PPR ranking crossed with who owns each player and what he costs to keep. ` +
-    `Value weights a keeper round at ten points — a 2nd-round keeper is charged 20 — so a top-five ` +
-    `player kept for a 2nd scores +15. Higher is better.`;
+    `ESPN's preseason ranking, blended to half-point PPR to match league scoring, crossed with who ` +
+    `owns each player and what he costs to keep. Value weights a keeper round at ten points — a ` +
+    `2nd-round keeper is charged 20 — so a top-five player kept for a 2nd scores +15. Higher is better.`;
 
   /* ---- filter controls ---- */
   const positions = [...new Set(all.map((p) => p.position).filter(Boolean))].sort();

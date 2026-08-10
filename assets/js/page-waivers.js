@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=0a01fa05";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=705f2550";
 
 const tableHost = $("#waiverTable");
 
@@ -6,6 +6,9 @@ try {
   const waivers = await load("waivers.json");
   const years = waivers.years || [];
   const latest = years[years.length - 1];
+  const derived = new Set(waivers.derived_years || []);
+  const remainingYears = Object.keys(waivers.remaining || {}).map(Number).sort();
+  const lastRemaining = remainingYears[remainingYears.length - 1];
 
   const rows = (waivers.teams || []).map((t) => ({
     ...t,
@@ -25,12 +28,22 @@ try {
     el(
       "div",
       { class: "grid grid-4" },
-      card(`Most left, ${latest}`, ranked[0]?.owner ?? "—", fmt.money(ranked[0]?.latest)),
-      card(`Least left, ${latest}`, ranked[ranked.length - 1]?.owner ?? "—", fmt.money(ranked[ranked.length - 1]?.latest)),
-      card(`League total, ${latest}`, fmt.money(leagueTotal), `${rows.length} teams`),
+      card(`Biggest ${latest} budget`, ranked[0]?.owner ?? "—", fmt.money(ranked[0]?.latest)),
+      card(`Smallest ${latest} budget`, ranked[ranked.length - 1]?.owner ?? "—", fmt.money(ranked[ranked.length - 1]?.latest)),
+      card(
+        lastRemaining ? `Spent it all in ${lastRemaining}` : `League total, ${latest}`,
+        lastRemaining ? spentOut(waivers, lastRemaining, rows) : fmt.money(leagueTotal),
+        lastRemaining ? "finished the season at $0" : `${rows.length} teams`
+      ),
       card("Seasons tracked", String(years.length), years.length ? `${years[0]}–${latest}` : "")
     ),
-    waivers.note ? el("p", { class: "notice", style: "margin-top:12px" }, waivers.note) : null
+    el(
+      "p",
+      { class: "notice", style: "margin-top:12px" },
+      `Every column is what an owner starts that season with: $100 plus whatever was left over${
+        waivers.cap ? `, capped at $${waivers.cap}` : ""
+      }.` + (derived.size ? ` ${[...derived].join(", ")} is rolled forward from what each team had left at the end of the season before.` : "")
+    )
   );
 
   /* ---- table: teams × seasons ---- */
@@ -44,7 +57,7 @@ try {
         "tr",
         {},
         el("th", { class: "sticky-col" }, "Owner"),
-        ...years.map((y) => el("th", { class: "num" }, y))
+        ...years.map((y) => el("th", { class: "num" }, derived.has(y) ? `${y}*` : String(y)))
       )
     ),
     el(
@@ -86,7 +99,7 @@ try {
   /* ---- latest-season bars ---- */
   const max = Math.max(...ranked.map((r) => r.latest ?? 0), 1);
   $("#waiverChart").replaceChildren(
-    el("h2", {}, `${latest} ending budgets`),
+    el("h2", {}, `${latest} starting budgets`),
     el(
       "div",
       { class: "card" },
@@ -107,6 +120,12 @@ try {
   );
 } catch (err) {
   fail(tableHost, err);
+}
+
+function spentOut(waivers, year, rows) {
+  const remaining = waivers.remaining[String(year)] || {};
+  const broke = rows.filter((t) => remaining[String(t.team)] === 0).map((t) => t.owner);
+  return broke.length ? broke.join(", ") : "nobody";
 }
 
 function card(label, value, sub) {

@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=0a01fa05";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=705f2550";
 
 const snapshot = $("#snapshot");
 
@@ -22,32 +22,54 @@ try {
   const career = stats.career || [];
   const mostWins = [...career].sort((a, b) => (b.wins ?? 0) - (a.wins ?? 0))[0];
   const mostPoints = [...career].sort((a, b) => (b.points_for ?? 0) - (a.points_for ?? 0))[0];
-  const titles = [...(standings.universal?.titles || [])].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))[0];
+  const leader = [...(standings.universal?.titles || [])].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))[0];
 
   snapshot.replaceChildren(
     el(
       "div",
       { class: "grid grid-4" },
-      statCard(`${last} champion`, lastSeason.champion || "—", "🏆", "badge-gold"),
-      statCard(`${last} Moules`, lastSeason.moules || "—", "🥴", "badge-clay"),
-      statCard("Most career wins", mostWins ? `${mostWins.owner}` : "—", null, null, mostWins ? `${mostWins.wins}-${mostWins.losses}` : ""),
-      statCard(
-        "Most career points",
-        mostPoints ? mostPoints.owner : "—",
-        null,
-        null,
-        mostPoints ? fmt.num(mostPoints.points_for, 0) : ""
-      )
-    ),
-    titles
-      ? el(
-          "p",
-          { class: "notice", style: "margin-top:12px" },
-          `League leader on the universal points table: ${titles.owner} (${titles.points} pts — ${titles.championships} title${
-            titles.championships === 1 ? "" : "s"
-          }, ${titles.playoffs} playoff appearances).`
-        )
-      : null
+      // The season just gone, champion and Moules together in one box.
+      el(
+        "div",
+        { class: "card stat" },
+        el("span", { class: "label" }, `${last} season`),
+        el("span", { class: "value", style: "font-size:1.05rem" }, `🏆 ${lastSeason.champion || "—"}`),
+        el("span", { class: "sub" }, `🥴 ${lastSeason.moules || "—"} took the Moules`)
+      ),
+      leader
+        ? el(
+            "a",
+            { class: "card stat", href: "standings.html?tab=alltime", style: "text-decoration:none;color:inherit" },
+            el("span", { class: "label" }, "Universal points leader"),
+            el("span", { class: "value", style: "font-size:1.05rem" }, leader.owner),
+            el(
+              "span",
+              { class: "sub num" },
+              `${leader.points} pts · ${leader.championships} title${leader.championships === 1 ? "" : "s"} · ${
+                leader.playoffs
+              } playoff berths`
+            )
+          )
+        : null,
+      mostWins
+        ? el(
+            "div",
+            { class: "card stat" },
+            el("span", { class: "label" }, "Most career wins"),
+            el("span", { class: "value", style: "font-size:1.05rem" }, mostWins.owner),
+            el("span", { class: "sub num" }, `${mostWins.wins}-${mostWins.losses}${mostWins.ties ? `-${mostWins.ties}` : ""}`)
+          )
+        : null,
+      mostPoints
+        ? el(
+            "div",
+            { class: "card stat" },
+            el("span", { class: "label" }, "Most career points"),
+            el("span", { class: "value", style: "font-size:1.05rem" }, mostPoints.owner),
+            el("span", { class: "sub num" }, fmt.num(mostPoints.points_for, 0))
+          )
+        : null
+    )
   );
 
   /* ---- champions timeline ---- */
@@ -56,22 +78,34 @@ try {
     el(
       "div",
       { class: "timeline" },
-      ...champs.map((s) =>
-        el(
+      ...champs.map((season) => {
+        const line = (stats.seasons[String(season.year)] || []).find((r) => r.owner === season.champion);
+        return el(
           "a",
-          { class: "tl-row", href: `standings.html?year=${s.year}`, style: "text-decoration:none;color:inherit" },
-          el("span", { class: "yr" }, s.year),
+          {
+            class: "tl-row",
+            href: `standings.html?year=${season.year}`,
+            style: "text-decoration:none;color:inherit;grid-template-columns:52px 1fr auto",
+          },
+          el("span", { class: "yr" }, season.year),
           el(
             "span",
             { class: "who" },
-            ownerDot(s.champion),
-            el("b", {}, s.champion),
-            s.runner_up
-              ? el("span", { style: "color:var(--text-faint);font-size:.82rem;margin-left:8px" }, `def. ${s.runner_up}`)
+            ownerDot(season.champion),
+            el("b", {}, season.champion),
+            season.runner_up
+              ? el("span", { style: "color:var(--text-faint);font-size:.82rem;margin-left:8px" }, `def. ${season.runner_up}`)
               : null
-          )
-        )
-      )
+          ),
+          line
+            ? el(
+                "span",
+                { class: "num", style: "font-size:.8rem;color:var(--text-faint);white-space:nowrap" },
+                `${line.wins}-${line.losses}${line.ties ? `-${line.ties}` : ""} · ${fmt.num(line.points_for, 0)} pts`
+              )
+            : null
+        );
+      })
     )
   );
 

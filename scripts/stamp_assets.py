@@ -37,8 +37,8 @@ def main():
     for path in glob.glob(os.path.join(ROOT, "*.html")):
         text = io.open(path, encoding="utf-8").read()
         before = text
-        text = re.sub(r'(href="assets/css/site\.css)(\?v=[a-f0-9]+)?"', rf"\1?v={stamp}\"", text)
-        text = re.sub(r'(src="assets/js/[a-z-]+\.js)(\?v=[a-f0-9]+)?"', rf"\1?v={stamp}\"", text)
+        text = re.sub(r'(href="assets/css/site\.css)(\?v=[a-f0-9]+)?"', rf'\1?v={stamp}"', text)
+        text = re.sub(r'(src="assets/js/[a-z-]+\.js)(\?v=[a-f0-9]+)?"', rf'\1?v={stamp}"', text)
         if text != before:
             io.open(path, "w", encoding="utf-8").write(text)
             touched += 1

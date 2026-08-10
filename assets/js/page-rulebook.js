@@ -1,4 +1,4 @@
-import { $, $$, el, load, fail } from "./app.js?v=0a01fa05";
+import { $, $$, el, load, fail } from "./app.js?v=705f2550";
 
 const rules = $("#rules");
 

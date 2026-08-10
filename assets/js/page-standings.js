@@ -1,4 +1,4 @@
-import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js?v=0a01fa05";
+import { $, $$, el, load, fmt, param, setParam, sortable, ownerDot, ownerHue, fail } from "./app.js?v=705f2550";
 
 const seasonView = $("#seasonView");
 const allTimeView = $("#allTimeView");
@@ -32,11 +32,12 @@ try {
     tabAll.classList.toggle("active", !isSeason);
     $("#seasonPanel").hidden = !isSeason;
     $("#allTimePanel").hidden = isSeason;
-    setParam("tab", isSeason ? null : "alltime");
+    setParam("tab", isSeason ? "season" : null);
   };
   tabSeason.addEventListener("click", () => showTab("season"));
   tabAll.addEventListener("click", () => showTab("alltime"));
-  if (param("tab") === "alltime") showTab("alltime");
+  // All-time is the default view; ?tab=season opens a single year.
+  showTab(param("tab") === "season" ? "season" : "alltime");
 
   function pick(y) {
     year = y;
@@ -184,6 +185,7 @@ try {
           "tr",
           {},
           el("th", { class: "sticky-col" }, "Owner"),
+          el("th", { class: "num", "data-sort": "team", "data-dir": "asc" }, "Team"),
           el("th", { class: "num", "data-sort": "points" }, "Pts"),
           el("th", { class: "num", "data-sort": "championships" }, "🏆"),
           el("th", { class: "num", "data-sort": "finalist" }, "Finals"),
@@ -205,6 +207,7 @@ try {
             "tr",
             {},
             el("td", { class: "sticky-col" }, ownerDot(r.owner), r.owner),
+            el("td", { class: "num", style: "color:var(--text-faint)" }, r.team),
             el("td", { class: "num", style: "font-weight:800" }, fmt.num(r.points)),
             el("td", { class: "num" }, r.championships ? el("span", { class: "badge badge-gold" }, r.championships) : "—"),
             el("td", { class: "num" }, fmt.num(r.finalist)),
@@ -222,7 +225,9 @@ try {
       el(
         "p",
         { class: "notice", style: "margin-bottom:14px" },
-        "Universal points: championship = 3, finals appearance = 2, playoff berth = 1, the Moules = −1."
+        "Universal points: championship = 3, finals appearance = 2, playoff berth = 1, the Moules = −1. " +
+          "Team is the franchise number — records follow the franchise, so a season played by a previous " +
+          "owner still counts toward the same line."
       ),
       el("div", { class: "table-wrap" }, table),
       el("div", { class: "section" }, el("h2", {}, "Finish grid"), gridView())

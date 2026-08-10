@@ -1,5 +1,247 @@
 {
  "year": 2026,
+ "prior_keepers": [
+  {
+   "team": 1,
+   "player": "Derrick Henry",
+   "player_key": "derrickhenry",
+   "round": 1
+  },
+  {
+   "team": 1,
+   "player": "Bijan Robinson",
+   "player_key": "bijanrobinson",
+   "round": 2
+  },
+  {
+   "team": 1,
+   "player": "Drake London",
+   "player_key": "drakelondon",
+   "round": 3
+  },
+  {
+   "team": 1,
+   "player": "Jaxon Smith-Njigba",
+   "player_key": "jaxonsmithnjigba",
+   "round": 8
+  },
+  {
+   "team": 2,
+   "player": "Josh Jacobs",
+   "player_key": "joshjacobs",
+   "round": 1
+  },
+  {
+   "team": 2,
+   "player": "Malik Nabers",
+   "player_key": "maliknabers",
+   "round": 2
+  },
+  {
+   "team": 2,
+   "player": "Zay Flowers",
+   "player_key": "zayflowers",
+   "round": 6
+  },
+  {
+   "team": 2,
+   "player": "David Njoku",
+   "player_key": "davidnjoku",
+   "round": 9
+  },
+  {
+   "team": 3,
+   "player": "Amon-Ra St. Brown",
+   "player_key": "amonrastbrown",
+   "round": 3
+  },
+  {
+   "team": 3,
+   "player": "Lamar Jackson",
+   "player_key": "lamarjackson",
+   "round": 4
+  },
+  {
+   "team": 3,
+   "player": "Brian Thomas Jr.",
+   "player_key": "brianthomas",
+   "round": 7
+  },
+  {
+   "team": 3,
+   "player": "Garrett Wilson",
+   "player_key": "garrettwilson",
+   "round": 13
+  },
+  {
+   "team": 4,
+   "player": "Jonathan Taylor",
+   "player_key": "jonathantaylor",
+   "round": 1
+  },
+  {
+   "team": 4,
+   "player": "Mike Evans",
+   "player_key": "mikeevans",
+   "round": 3
+  },
+  {
+   "team": 4,
+   "player": "David Montgomery",
+   "player_key": "davidmontgomery",
+   "round": 5
+  },
+  {
+   "team": 4,
+   "player": "Courtland Sutton",
+   "player_key": "courtlandsutton",
+   "round": 9
+  },
+  {
+   "team": 5,
+   "player": "Josh Allen",
+   "player_key": "joshallen",
+   "round": 2
+  },
+  {
+   "team": 5,
+   "player": "Trey McBride",
+   "player_key": "treymcbride",
+   "round": 3
+  },
+  {
+   "team": 5,
+   "player": "Alvin Kamara",
+   "player_key": "alvinkamara",
+   "round": 4
+  },
+  {
+   "team": 5,
+   "player": "Brian Robinson Jr.",
+   "player_key": "brianrobinson",
+   "round": 11
+  },
+  {
+   "team": 6,
+   "player": "Chase Brown",
+   "player_key": "chasebrown",
+   "round": 4
+  },
+  {
+   "team": 6,
+   "player": "Jayden Daniels",
+   "player_key": "jaydendaniels",
+   "round": 7
+  },
+  {
+   "team": 6,
+   "player": "Nico Collins",
+   "player_key": "nicocollins",
+   "round": 9
+  },
+  {
+   "team": 6,
+   "player": "Sam LaPorta",
+   "player_key": "samlaporta",
+   "round": 12
+  },
+  {
+   "team": 7,
+   "player": "Jahmyr Gibbs",
+   "player_key": "jahmyrgibbs",
+   "round": 1
+  },
+  {
+   "team": 7,
+   "player": "Puka Nacua",
+   "player_key": "pukanacua",
+   "round": 5
+  },
+  {
+   "team": 7,
+   "player": "De'Von Achane",
+   "player_key": "devonachane",
+   "round": 8
+  },
+  {
+   "team": 7,
+   "player": "Isiah Pacheco",
+   "player_key": "isiahpacheco",
+   "round": 10
+  },
+  {
+   "team": 8,
+   "player": "Ja'Marr Chase",
+   "player_key": "jamarrchase",
+   "round": 3
+  },
+  {
+   "team": 8,
+   "player": "Joe Burrow",
+   "player_key": "joeburrow",
+   "round": 6
+  },
+  {
+   "team": 8,
+   "player": "Brock Bowers",
+   "player_key": "brockbowers",
+   "round": 8
+  },
+  {
+   "team": 8,
+   "player": "Chuba Hubbard",
+   "player_key": "chubahubbard",
+   "round": 15
+  },
+  {
+   "team": 9,
+   "player": "A.J. Brown",
+   "player_key": "ajbrown",
+   "round": 1
+  },
+  {
+   "team": 9,
+   "player": "Saquon Barkley",
+   "player_key": "saquonbarkley",
+   "round": 2
+  },
+  {
+   "team": 9,
+   "player": "Ladd McConkey",
+   "player_key": "laddmcconkey",
+   "round": 6
+  },
+  {
+   "team": 9,
+   "player": "Bucky Irving",
+   "player_key": "buckyirving",
+   "round": 12
+  },
+  {
+   "team": 10,
+   "player": "Jaylen Waddle",
+   "player_key": "jaylenwaddle",
+   "round": 5
+  },
+  {
+   "team": 10,
+   "player": "Jerry Jeudy",
+   "player_key": "jerryjeudy",
+   "round": 6
+  },
+  {
+   "team": 10,
+   "player": "George Pickens",
+   "player_key": "georgepickens",
+   "round": 7
+  },
+  {
+   "team": 10,
+   "player": "T.J. Hockenson",
+   "player_key": "tjhockenson",
+   "round": 14
+  }
+ ],
  "generated_from": {
   "draft": "2025 Draft tab",
   "rosters": "source/final-rosters-2025.json",

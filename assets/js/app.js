@@ -82,9 +82,9 @@ export function ownerDot(name) {
 /* ---------- chrome ---------- */
 const NAV = [
   ["index.html", "Home"],
-  ["draft.html", "Draft History"],
   ["standings.html", "Standings"],
   ["stats.html", "Stats"],
+  ["draft.html", "Draft History"],
   ["keepers.html", "Keepers"],
   ["draftprep.html", "Draft Prep"],
   ["waivers.html", "Waiver $"],

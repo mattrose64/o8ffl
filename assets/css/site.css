@@ -271,6 +271,17 @@ main { padding-bottom: 64px; min-height: 60vh; }
 .grid-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .grid-3 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
 .grid-4 { grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); }
+/* Eight explore tiles: two across on a phone, four on a desktop — never a ragged 5 + 2. */
+.grid-tiles { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+@media (min-width: 1000px) {
+  .grid-tiles { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Champions list and the record books share a row on desktop. */
+.champs-layout { display: grid; gap: 12px; }
+@media (min-width: 900px) {
+  .champs-layout { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; }
+}
 
 .stat { display: flex; flex-direction: column; gap: 2px; }
 .stat .label {
@@ -714,6 +725,40 @@ mark {
   color: inherit;
   border-radius: 3px;
   padding: 0 2px;
+}
+
+/* ---------- meeting minutes ---------- */
+.minutes { font-size: 0.9rem; color: var(--text-dim); }
+.minutes ul { margin: 4px 0 4px; padding-left: 20px; }
+.minutes > ul { padding-left: 0; list-style: none; }
+.minutes li { margin-bottom: 5px; }
+.minutes li.minute-head {
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 14px;
+  font-size: 0.95rem;
+  list-style: none;
+}
+.minutes > ul > li.minute-head::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--accent);
+  margin-right: 8px;
+  vertical-align: 2px;
+}
+.minute-outcome {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
 }
 
 /* ---------- misc ---------- */

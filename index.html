@@ -7,7 +7,7 @@
 <meta name="description" content="Draft history, standings, stats, keepers and the rulebook for the Original 8 Fantasy Football League.">
 <meta name="theme-color" content="#0a0e13">
 <link rel="icon" href="assets/img/favicon.svg">
-<link rel="stylesheet" href="assets/css/site.css?v=dd39d354\">
+<link rel="stylesheet" href="assets/css/site.css?v=705f2550">
 </head>
 <body>
 
@@ -37,14 +37,15 @@
 
   <section class="section">
     <div class="section-head"><h2>Explore</h2></div>
-    <div class="grid grid-3">
-      <a class="tile" href="draft.html"><span class="t-icon">🏈</span><h3>Draft History</h3><p>Every board since 2014, searchable by player or owner.</p></a>
+    <div class="grid grid-tiles">
       <a class="tile" href="standings.html"><span class="t-icon">🏆</span><h3>Standings</h3><p>Season finishes and the all-time universal table.</p></a>
-      <a class="tile" href="stats.html"><span class="t-icon">📊</span><h3>Stats</h3><p>Career and single-season records, wins, points, trades.</p></a>
+      <a class="tile" href="stats.html"><span class="t-icon">📊</span><h3>Stats</h3><p>Career and single-season wins, points and trades.</p></a>
+      <a class="tile" href="draft.html"><span class="t-icon">🏈</span><h3>Draft History</h3><p>Every board since 2014, searchable by player or owner.</p></a>
       <a class="tile" href="keepers.html"><span class="t-icon">🔒</span><h3>Keepers</h3><p>Who's keepable, what it costs, and what they cost before.</p></a>
       <a class="tile" href="draftprep.html"><span class="t-icon">🎯</span><h3>Draft Prep</h3><p>ESPN's top 400 crossed with keeper costs and owners.</p></a>
       <a class="tile" href="waivers.html"><span class="t-icon">💵</span><h3>Waiver Dollars</h3><p>Budgets and rollover by team and season.</p></a>
       <a class="tile" href="rulebook.html"><span class="t-icon">📜</span><h3>Rulebook</h3><p>The by-laws, readable on a phone.</p></a>
+      <a class="tile" href="meeting.html"><span class="t-icon">🗓️</span><h3>Meeting Prep</h3><p>The 2026 brief plus every past agenda and minutes.</p></a>
     </div>
   </section>
 
@@ -53,12 +54,10 @@
       <h2>Champions</h2>
       <a href="standings.html" style="font-size:.85rem;color:var(--text-dim)">All standings →</a>
     </div>
-    <div class="card" id="champions"><div class="loading">Loading…</div></div>
-  </section>
-
-  <section class="section">
-    <div class="section-head"><h2>League records</h2></div>
-    <div class="grid grid-2" id="records"></div>
+    <div class="champs-layout">
+      <div class="card" id="champions"><div class="loading">Loading…</div></div>
+      <div id="records" class="grid"></div>
+    </div>
   </section>
 </main>
 
@@ -69,6 +68,6 @@
   </div>
 </footer>
 
-<script type="module" src="assets/js/page-home.js?v=dd39d354\"></script>
+<script type="module" src="assets/js/page-home.js?v=705f2550"></script>
 </body>
 </html>

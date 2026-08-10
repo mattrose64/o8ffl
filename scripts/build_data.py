@@ -87,6 +87,10 @@ FORMER_OWNERS = {
 # unambiguous ("TEAM FOSTER"). Too risky for prose.
 TEAM_NAME_SURNAMES = {"Foster": "Jon F.", "Gordon": "Dan", "Moules": "Tyler"}
 
+# Surnames as they get misspelled in the meeting minutes and draft boards.
+TYPO_SURNAMES = {"Whitcomb": ["Witcomb", "Whitcombe"], "Caruso": ["Caurso"], "Dooley": ["Dooely"],
+                 "Bradford": ["Bradfrod"], "Perkins": ["Perkings"]}
+
 LONE_SURNAMES = {
     "Bradford": "C.J.",
     "Shea": "Connor",
@@ -221,7 +225,11 @@ class OwnerRegistry:
                 f"{first}. {last}",
             }
             # "Matt Rose" is also written "Matthew Rose"; "Jon" as "John"; "Mike"/"Michael".
-            for a, b in (("Matt", "Matthew"), ("Jon", "John"), ("Mike", "Michael"), ("C.J.", "CJ")):
+            for typo in TYPO_SURNAMES.get(last, []):
+                variants.add(f"{first} {typo}")
+                variants.add(typo if last in LONE_SURNAMES else f"{first} {typo}")
+            for a, b in (("Matt", "Matthew"), ("Jon", "John"), ("Mike", "Michael"),
+                         ("C.J.", "CJ"), ("Chris", "Christopher")):
                 if first == a:
                     variants.add(f"{b} {last}")
                 elif first == b:
@@ -707,11 +715,19 @@ def parse_waivers(wb, reg: OwnerRegistry):
             break
         footer += 1
 
+    cap = None
+    if note:
+        m = re.search(r"\$(\d+)", note)
+        if m:
+            cap = int(m.group(1))
+
     return {
         "years": sorted(years.keys()),
         "teams": sorted(teams, key=lambda t: t["team"]),
         "totals": totals,
+        "cap": cap,
         "note": reg.build_redactor()(note),
+        "basis": "starting budget: $100 plus last season's leftover, capped",
     }
 
 
@@ -1338,13 +1354,23 @@ def apply_season_overlay(data, reg: OwnerRegistry, standings, stats, waivers):
         ]
         applied = True
 
-    budgets = data.get("waiver_budgets") or {}
-    if budgets and year not in waivers["years"]:
-        for team in waivers["teams"]:
-            value = budgets.get(str(team["team"]))
-            if value is not None:
-                team["budgets"][str(year)] = value
-        waivers["years"] = sorted(waivers["years"] + [year])
+    # The workbook's yearly columns are what each owner STARTS a season with: $100 plus
+    # whatever they didn't spend last year, capped at $150 (by-laws 6.3). ESPN only tells
+    # us what was left at the end, so that rolls forward into the next season's start.
+    remaining = data.get("waiver_remaining") or data.get("waiver_budgets") or {}
+    if remaining:
+        waivers.setdefault("remaining", {})[str(year)] = {
+            str(team): value for team, value in remaining.items()
+        }
+        next_year = year + 1
+        cap = waivers.get("cap") or 150
+        if next_year not in waivers["years"]:
+            for team in waivers["teams"]:
+                left = remaining.get(str(team["team"]))
+                if left is not None:
+                    team["budgets"][str(next_year)] = min(cap, 100 + left)
+            waivers["years"] = sorted(waivers["years"] + [next_year])
+            waivers.setdefault("derived_years", []).append(next_year)
         applied = True
 
     return applied
@@ -1540,9 +1566,17 @@ def build_draft_prep(rankings, keepers, year):
         if row.get("player_key"):
             by_key.setdefault(row["player_key"], row)
 
+    # The league plays half-point PPR and ESPN publishes no half-PPR list, so blend their
+    # standard and full-PPR ranks — the two scoring systems this sits exactly between —
+    # and re-rank off the average. Players ESPN ranks in only one system keep that rank.
+    ordered = sorted(
+        rankings["players"],
+        key=lambda p: ((p["rank"] + (p.get("rank_standard") or p["rank"])) / 2, p["rank"]),
+    )
+
     rows = []
     matched = 0
-    for ordinal, entry in enumerate(sorted(rankings["players"], key=lambda p: p["rank"]), start=1):
+    for ordinal, entry in enumerate(ordered, start=1):
         key = player_key(entry["player"])
         keeper = by_key.get(key)
         if not keeper:
@@ -1554,7 +1588,8 @@ def build_draft_prep(rankings, keepers, year):
         rows.append(
             {
                 "rank": ordinal,
-                "rank_espn": entry["rank"],
+                "rank_ppr": entry["rank"],
+                "rank_standard": entry.get("rank_standard"),
                 "player": entry["player"],
                 "player_key": key,
                 "nfl_team": entry["nfl_team"],
@@ -1572,6 +1607,7 @@ def build_draft_prep(rankings, keepers, year):
     return {
         "year": year,
         "source": rankings.get("source"),
+        "scoring": "half-PPR blend of ESPN's standard and full-PPR ranks",
         "weighting": "keeper cost counts as ten points per round; value = (round x 10) - ranking",
         "matched_to_rosters": matched,
         "players": rows,
@@ -1682,12 +1718,28 @@ def main():
             if synth:
                 boards[year] = synth
 
+    # Seasons with no roster sheet have no keeper column, but build_keepers.py works out
+    # who was kept from where they were taken relative to their cost — fold that in too.
+    reconstructed = {}
+    for path in glob.glob(os.path.join(ROOT, "source", "eligible-keepers-*.json")):
+        with open(path, encoding="utf-8") as fh:
+            doc = json.load(fh)
+        for entry in doc.get("prior_keepers") or []:
+            reconstructed.setdefault(doc["year"] - 1, set()).add((entry["team"], entry["player_key"]))
+
     # Fold keeper flags from the roster sheets into the boards.
     for year, board in boards.items():
         roster = roster_years.get(year)
+        keeper_keys = set(reconstructed.get(year, ()))
         if not roster:
+            if keeper_keys:
+                for rnd in board["rounds"]:
+                    for pick in rnd["picks"]:
+                        pick["keeper"] = bool(
+                            pick["player_key"] and (pick["team"], pick["player_key"]) in keeper_keys
+                        )
             continue
-        keeper_keys = {
+        keeper_keys |= {
             (block["team"], p["player_key"])
             for block in roster["drafts"]
             for p in block["picks"]

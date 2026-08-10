@@ -1,4 +1,4 @@
-import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=0a01fa05";
+import { $, el, load, fmt, param, setParam, openPlayer, ownerDot, ownerHue, fail } from "./app.js?v=705f2550";
 
 const view = $("#keeperView");
 
@@ -148,9 +148,11 @@ try {
           { class: "badge badge-plain", style: `margin-left:6px;border-color:hsl(${ownerHue(owner)} 50% 45% / .5)` },
           `${items.length} players`
         ),
-        eligible < items.length
-          ? el("span", { class: "badge badge-green", style: "margin-left:4px" }, `${eligible} keepable`)
-          : null
+        el(
+          "span",
+          { class: `badge ${eligible === items.length ? "badge-green" : "badge-gold"}`, style: "margin-left:4px" },
+          eligible === items.length ? `all ${eligible} keepable` : `${eligible} of ${items.length} keepable`
+        )
       ),
       el("div", { class: "keeper-body" }, ...items.map(playerRow))
     );
@@ -186,13 +188,16 @@ try {
           "span",
           {},
           [
+            [row.position, row.nfl_team].filter(Boolean).join(" ") || null,
             row.acquired,
-            row.year_signed ? `signed ${row.year_signed}` : null,
             row.contract_years_remaining !== null
-              ? `${row.contract_years_remaining} yr${row.contract_years_remaining === 1 ? "" : "s"} left`
+              ? row.contract_years_remaining === 0
+                ? "contract up"
+                : `${row.contract_years_remaining} more year${row.contract_years_remaining === 1 ? "" : "s"}`
               : null,
-            row.recent ? `last drafted R${row.recent.round} in ${row.recent.year}` : "never drafted",
-            row.best && row.recent && row.best !== row.recent.round ? `best R${row.best}` : null,
+            row.year_signed ? `on the roster since ${row.year_signed}` : null,
+            row.recent ? `went R${row.recent.round} in ${row.recent.year}` : "never drafted",
+            row.history.length > 1 ? `${row.history.length} drafts, earliest R${row.best}` : null,
           ]
             .filter(Boolean)
             .join(" · ")
@@ -212,24 +217,7 @@ try {
         row.value !== null && row.value >= 3
           ? el("span", { class: "badge badge-green", title: `Costs R${row.cost_round}; has gone as early as R${row.best}` }, `bargain +${row.value}`)
           : null,
-        !row.eligible ? el("span", { class: "badge badge-clay" }, row.cost_label || "Not keepable") : null,
-        historySpark(row.history)
-      )
-    );
-  }
-
-  function historySpark(history) {
-    if (!history.length) return null;
-    const recent = history.slice(-6);
-    return el(
-      "span",
-      { class: "spark", title: recent.map((h) => `${h.year}: R${h.round}`).join(" · ") },
-      ...recent.map((h) =>
-        el("i", {
-          style: `height:${Math.max(3, 22 - (h.round - 1) * 1.15)}px;background:${
-            h.keeper ? "var(--gold)" : "var(--line-strong)"
-          }`,
-        })
+        !row.eligible ? el("span", { class: "badge badge-clay" }, row.cost_label || "Not keepable") : null
       )
     );
   }
