@@ -22,9 +22,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def main():
-    assets = sorted(glob.glob(os.path.join(ROOT, "assets", "js", "*.js"))) + [
-        os.path.join(ROOT, "assets", "css", "site.css")
-    ]
+    # Images count too: the crest keeps its filename when it's replaced, so without a
+    # stamp browsers happily serve the previous artwork for days.
+    assets = (
+        sorted(glob.glob(os.path.join(ROOT, "assets", "js", "*.js")))
+        + [os.path.join(ROOT, "assets", "css", "site.css")]
+        + sorted(glob.glob(os.path.join(ROOT, "assets", "img", "*")))
+    )
     # Hash the files with any previous stamp stripped out, otherwise stamping changes the
     # content, which changes the hash, which needs another stamp — it never settles.
     digest = hashlib.sha1()
@@ -39,6 +43,9 @@ def main():
         before = text
         text = re.sub(r'(href="assets/css/site\.css)(\?v=[a-f0-9]+)?"', rf'\1?v={stamp}"', text)
         text = re.sub(r'(src="assets/js/[a-z-]+\.js)(\?v=[a-f0-9]+)?"', rf'\1?v={stamp}"', text)
+        text = re.sub(
+            r'((?:src|href)="assets/img/[A-Za-z0-9._-]+)(\?v=[a-f0-9]+)?"', rf'\1?v={stamp}"', text
+        )
         if text != before:
             io.open(path, "w", encoding="utf-8").write(text)
             touched += 1
