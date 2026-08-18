@@ -5,6 +5,8 @@
    ========================================================================== */
 
 :root {
+  --brand: #7b2fe0;        /* the crest's purple */
+  --brand-bright: #a855f7;
   --field: #1f8a4c;
   --field-bright: #35c46a;
   --gold: #e0b348;
@@ -32,6 +34,8 @@
 }
 
 [data-theme="light"] {
+  --brand: #6d28d9;
+  --brand-bright: #8b5cf6;
   --bg: #f4f6f8;
   --bg-2: #eceff3;
   --surface: #ffffff;
@@ -76,7 +80,7 @@ body::before {
   z-index: 0;
   background:
     repeating-linear-gradient(90deg, transparent 0 79px, var(--line) 79px 80px),
-    radial-gradient(120% 60% at 50% -10%, rgba(53, 196, 106, 0.10), transparent 60%);
+    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--brand) 12%, transparent), transparent 60%);
   opacity: 0.55;
   mask-image: linear-gradient(180deg, #000 0, transparent 620px);
   -webkit-mask-image: linear-gradient(180deg, #000 0, transparent 620px);
@@ -157,8 +161,8 @@ main { padding-bottom: 64px; min-height: 60vh; }
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background: linear-gradient(150deg, var(--field-bright), var(--field));
-  color: #05130a;
+  background: linear-gradient(150deg, var(--brand-bright), var(--brand));
+  color: #f4efff;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: -0.04em;
@@ -243,6 +247,14 @@ main { padding-bottom: 64px; min-height: 60vh; }
   border-bottom: 1px solid var(--line);
   overflow: hidden;
 }
+/* A wash of the crest's purple behind it, so the logo doesn't look pasted on. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -40% 40% 0 -10%;
+  background: radial-gradient(50% 60% at 30% 45%, color-mix(in srgb, var(--brand) 30%, transparent), transparent 70%);
+  pointer-events: none;
+}
 .hero::after {
   content: "";
   position: absolute;
@@ -250,11 +262,36 @@ main { padding-bottom: 64px; min-height: 60vh; }
   right: 0;
   bottom: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--field), var(--field-bright), var(--gold));
+  background: linear-gradient(90deg, var(--brand), var(--brand-bright), var(--gold));
   opacity: 0.9;
 }
 .hero h1 { margin-bottom: 8px; }
 .hero p { color: var(--text-dim); max-width: 60ch; margin-bottom: 0; }
+
+.hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-direction: column;
+  text-align: center;
+}
+.hero-copy { min-width: 0; }
+.hero-logo {
+  width: min(190px, 52vw);
+  height: auto;
+  flex: 0 0 auto;
+  border-radius: 20px;
+  /* The crest ships on black; a dark plate keeps it deliberate in either theme. */
+  background: #080b10;
+  padding: 8px;
+  box-shadow: 0 10px 34px color-mix(in srgb, var(--brand) 34%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+@media (min-width: 760px) {
+  .hero { padding: 40px 0 32px; }
+  .hero-inner { flex-direction: row; text-align: left; gap: 28px; }
+  .hero-logo { width: 200px; }
+}
 .page-head { padding-top: 24px; padding-bottom: 6px; }
 .page-head p { color: var(--text-dim); max-width: 66ch; }
 

@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0f2a19"/>
-  <ellipse cx="32" cy="32" rx="21" ry="13" transform="rotate(-30 32 32)" fill="#8a4b28" stroke="#f0e6d8" stroke-width="2.5"/>
-  <path d="M23 41 L41 23" stroke="#f0e6d8" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M27 34 l4 4 M31 30 l4 4 M35 26 l4 4" stroke="#f0e6d8" stroke-width="2" stroke-linecap="round"/>
+  <rect width="64" height="64" rx="14" fill="#0a0710"/>
+  <!-- The crest is far too detailed to read at 16px, so the tab mark is just the wordmark. -->
+  <text x="32" y="30" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="22"
+        font-weight="bold" fill="#a855f7" letter-spacing="-1">O8</text>
+  <text x="32" y="47" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="14"
+        font-weight="bold" fill="#e9e3f5" letter-spacing="0">FFL</text>
 </svg>

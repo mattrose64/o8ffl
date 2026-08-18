@@ -7,7 +7,8 @@
 <meta name="description" content="Draft history, standings, stats, keepers and the rulebook for the Original 8 Fantasy Football League.">
 <meta name="theme-color" content="#0a0e13">
 <link rel="icon" href="assets/img/favicon.svg">
-<link rel="stylesheet" href="assets/css/site.css?v=d09c04f1">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/css/site.css?v=bd49d9d9">
 </head>
 <body>
 
@@ -25,10 +26,15 @@
 </header>
 
 <section class="hero">
-  <div class="wrap">
-    <p class="eyebrow" id="heroSeason">Season</p>
-    <h1>Original 8 Fantasy Football League</h1>
-    <p id="heroBlurb">Eleven seasons of drafts, standings, keepers and grudges — all in one place.</p>
+  <div class="wrap hero-inner">
+    <!-- Hidden until the crest actually loads, so a missing file is invisible rather than broken. -->
+    <img class="hero-logo" id="heroLogo" src="assets/img/logo.png" alt="Original 8 Fantasy Football League crest"
+         hidden onload="this.hidden=false" onerror="this.remove()">
+    <div class="hero-copy">
+      <p class="eyebrow" id="heroSeason">Season</p>
+      <h1>Original 8 Fantasy Football League</h1>
+      <p id="heroBlurb">Eleven seasons of drafts, standings, keepers and grudges — all in one place.</p>
+    </div>
   </div>
 </section>
 
@@ -68,6 +74,6 @@
   </div>
 </footer>
 
-<script type="module" src="assets/js/page-home.js?v=d09c04f1"></script>
+<script type="module" src="assets/js/page-home.js?v=bd49d9d9"></script>
 </body>
 </html>

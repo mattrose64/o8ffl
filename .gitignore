@@ -11,3 +11,6 @@ __pycache__/
 
 # Generated for pasting into Excel — regenerate with scripts/build_keepers.py
 build/
+
+# Full-resolution artwork; the site serves the resized copy in assets/img/
+source/logo-original.png
