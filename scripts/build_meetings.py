@@ -112,8 +112,11 @@ def parse_docx(path):
         if m := re.match(r"Notice of the (\d{4}) Annual Meeting", text, re.I):
             meta["year"] = int(m.group(1))
             continue
-        if m := re.match(r"Date:\s*(.+)", text, re.I):
-            meta["date"] = m.group(1).strip()
+        if m := re.match(r"Date:\s*(.*?)(?:\s+Place:\s*(.+))?$", text, re.I):
+            if m.group(1).strip():
+                meta["date"] = m.group(1).strip()
+            if m.group(2):
+                meta["place"] = m.group(2).strip()
             continue
         if m := re.match(r"Place:\s*(.+)", text, re.I):
             meta["place"] = m.group(1).strip()
@@ -184,11 +187,28 @@ def parse_pdf(path):
     return meta, nodes
 
 
+OUTCOME_START = re.compile(
+    r"^(vote[d]?\b|approved\b|not approved\b|denied\b|no change\b|status quo\b|winner\b)", re.I
+)
+
+
 def split_outcome(text):
     """
     Items and their outcomes are written on one line: "Auction Draft-Voted 6-4 against."
     Pull the outcome out so the site can style it.
+
+    Some lines carry two votes ("League fees: Remove anniversary fee- Voted 10-0 +
+    Increase the fee to $200 - Voted 10-0"), and some carry a hyphen long before the vote
+    ("Additional Proposal - Extension of the revote... -Voted 10-0"). Splitting where the
+    outcome actually begins handles both; anything else falls back to the loose scan.
     """
+    for idx, ch in enumerate(text):
+        if ch in "-–" and idx > 0:
+            between_digits = text[idx - 1].isdigit() and idx + 1 < len(text) and text[idx + 1].isdigit()
+            head, tail = text[:idx].strip(" -–"), text[idx + 1 :].strip()
+            if not between_digits and head and OUTCOME_START.match(tail):
+                return head, tail
+
     for sep in ("–", "-"):
         idx = text.rfind(sep)
         while idx > 0:
@@ -200,6 +220,48 @@ def split_outcome(text):
                     return head, tail
             idx = text.rfind(sep, 0, idx)
     return text, None
+
+
+SECTION_ORDER = re.compile(r"^draft order selection", re.I)
+SECTION_DETAILS = re.compile(r"^draft day details", re.I)
+# "Matt Rose-1st", "Brian Dooley- 10th"
+ORDER_LINE = re.compile(r"^(?P<who>.+?)\s*[-–]\s*(?P<slot>\d{1,2})(?:st|nd|rd|th)\b", re.I)
+
+
+def extract_structure(items, reg):
+    """
+    Two sections are worth having as data rather than prose: the draft-slot selection and
+    the draft-day logistics. Both are written the same way every year.
+    """
+    order, details, section = [], {}, None
+    for item in items:
+        if item["level"] == 0:
+            section = (
+                "order" if SECTION_ORDER.match(item["text"])
+                else "details" if SECTION_DETAILS.match(item["text"])
+                else None
+            )
+            continue
+        if section == "order":
+            m = ORDER_LINE.match(item["text"])
+            if m:
+                who = reg.resolve(m.group("who"), record=False)
+                order.append(
+                    {
+                        "choice": len(order) + 1,
+                        "slot": int(m.group("slot")),
+                        "owner": who["display"] if who else m.group("who").strip(),
+                        "team": who["team"] if who else None,
+                    }
+                )
+        elif section == "details":
+            text = item["text"]
+            key = "draft" if re.match(r"time\s*/?\s*location", text, re.I) else (
+                "keepers" if re.search(r"keeper", text, re.I) else None
+            )
+            if key:
+                details[key] = re.sub(r"^[^-–]*[-–]\s*", "", text).strip()
+    return order, details
 
 
 def main():
@@ -246,9 +308,12 @@ def main():
                 }
             )
 
+        order, details = extract_structure(items, reg)
         meetings.append(
             {
                 "year": year,
+                "draft_order": order,
+                "details": details,
                 "date": shorten(meta.get("date")),
                 "place": meta.get("place"),
                 "source": os.path.basename(path),

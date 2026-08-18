@@ -1,4 +1,4 @@
-import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=bb7283a2";
+import { $, el, load, fmt, ownerDot, fail } from "./app.js?v=d09c04f1";
 
 const body = $("#meetingBody");
 
@@ -15,47 +15,88 @@ try {
   const last = meeting.last_completed;
   const lastSeason = meta.seasons.find((s) => s.year === last) || {};
 
+  // Once this season's meeting has been held, its minutes outrank anything derived:
+  // the draft order was actually chosen in the room, and the dates are set.
+  const held = (archive?.meetings || []).find((m) => m.year === season) || null;
+  const dates = held?.details || {};
+
+  const head = document.querySelector(".page-head");
+  if (held && head) {
+    head.querySelector("p.eyebrow").textContent = `${season} season`;
+    head.querySelector("h1").textContent = "League brief";
+    head.querySelector("h1 + p").textContent =
+      `The ${season} owners' meeting is done. What was decided, what to do before draft day, ` +
+      `and every meeting on record.`;
+  }
+
   $("#meetingHero").replaceChildren(
     el(
       "div",
       { class: "grid grid-4" },
-      card("Season", String(season ?? "—"), `following ${last}`),
-      card("Champion to beat", lastSeason.champion || "—", `${last} title`),
-      card("Holds the Moules", lastSeason.moules || "—", "buys $50 of food & drink"),
-      card("Keeper limit", "4 per team", "due 1 week before the draft")
+      card("Season", String(season ?? "—"), held ? `meeting held ${held.date}` : `following ${last}`),
+      card("Keepers due", dates.keepers || "one week before the draft", "4 per team, to the commissioner"),
+      card("Draft day", dates.draft ? dates.draft.split(".")[0] : "to be set", dates.draft ? dates.draft.split(".").slice(1).join(".").trim() : ""),
+      card("Champion to beat", lastSeason.champion || "—", `${last} title · ${lastSeason.moules || "—"} runs the beer mile`)
     )
   );
 
-  /* ---- draft order selection ---- */
-  const orderCard = el(
-    "div",
-    { class: "card" },
-    el("p", { class: "eyebrow" }, "Draft-slot selection order · by-laws 4.2"),
-    el(
-      "p",
-      { style: "font-size:.87rem;color:var(--text-dim)" },
-      `Order in which owners choose their ${season} draft position, derived from the ${last} final standings.`
-    ),
-    el(
-      "div",
-      { class: "timeline" },
-      ...meeting.draft_order_selection.map((row) =>
+  /* ---- draft order ---- */
+  const chosen = (held?.draft_order || []).filter((o) => o.slot);
+  const orderCard = chosen.length
+    ? el(
+        "div",
+        { class: "card" },
+        el("p", { class: "eyebrow" }, `${season} draft order`),
+        el(
+          "p",
+          { style: "font-size:.87rem;color:var(--text-dim)" },
+          "Picked in the room at the meeting, in the selection order the by-laws set from last season's finish."
+        ),
         el(
           "div",
-          { class: "tl-row", style: "grid-template-columns:34px 1fr auto" },
-          el("span", { class: "yr" }, row.choice),
-          el(
-            "span",
-            { class: "who" },
-            ownerDot(row.owner),
-            el("b", {}, row.owner),
-            el("span", { style: "display:block;font-size:.76rem;color:var(--text-faint)" }, row.label)
-          ),
-          el("span", { class: "badge badge-plain" }, `${fmt.ord(row.place)} in ${last}`)
+          { class: "timeline" },
+          ...[...chosen]
+            .sort((a, b) => a.slot - b.slot)
+            .map((row) =>
+              el(
+                "div",
+                { class: "tl-row", style: "grid-template-columns:34px 1fr auto" },
+                el("span", { class: "yr" }, row.slot),
+                el("span", { class: "who" }, ownerDot(row.owner), el("b", {}, row.owner)),
+                el("span", { class: "badge badge-plain" }, `${fmt.ord(row.choice)} to choose`)
+              )
+            )
         )
       )
-    )
-  );
+    : el(
+        "div",
+        { class: "card" },
+        el("p", { class: "eyebrow" }, "Draft-slot selection order · by-laws 4.2"),
+        el(
+          "p",
+          { style: "font-size:.87rem;color:var(--text-dim)" },
+          `Order in which owners choose their ${season} draft position, derived from the ${last} final standings.`
+        ),
+        el(
+          "div",
+          { class: "timeline" },
+          ...meeting.draft_order_selection.map((row) =>
+            el(
+              "div",
+              { class: "tl-row", style: "grid-template-columns:34px 1fr auto" },
+              el("span", { class: "yr" }, row.choice),
+              el(
+                "span",
+                { class: "who" },
+                ownerDot(row.owner),
+                el("b", {}, row.owner),
+                el("span", { style: "display:block;font-size:.76rem;color:var(--text-faint)" }, row.label)
+              ),
+              el("span", { class: "badge badge-plain" }, `${fmt.ord(row.place)} in ${last}`)
+            )
+          )
+        )
+      );
 
   /* ---- final standings ---- */
   const standingsCard = el(
@@ -114,54 +155,60 @@ try {
     )
   );
 
-  /* ---- agenda ---- */
+  /* ---- what's left to do before the draft ---- */
+  const decided2026 = (held?.items || []).filter((i) => i.outcome);
   const agendaCard = el(
     "div",
     { class: "card" },
-    el("p", { class: "eyebrow" }, "Agenda"),
+    el("p", { class: "eyebrow" }, held ? `Before draft day` : "Agenda"),
     el(
       "ul",
       { class: "checklist" },
-      ...[
-        { text: `Set the draft date and venue — ${lastSeason.moules || "the Moules holder"} owes $50 of food and drink` },
-        { text: "Set the keeper deadline: one week before the draft" },
-        { text: "Collect league fees — due on or before draft day, or the team auto-drafts" },
-        { text: "Confirm the rule changes already voted in for this season (below)" },
-        {
-          // Quick rule calls first, then the item that needs real discussion and travel
-          // planning — so it can run long without squeezing everything else.
-          text: "Take new proposals, then vote — a proposer or co-signer must be in the room",
-          sub: [
-            "Formalize the trade deadline",
-            "Increase the Moules punishment from $50 to $100",
-            "Memorialize the shotgun mid draft",
-            "2027 Destination Draft",
-          ],
-          note: "all proposed by Ryan so far",
-        },
-        { text: "Run the draft-slot selection in the order listed below" },
-        { text: "Confirm starting waiver budgets" },
-      ].map((item) =>
+      ...(held
+        ? [
+            `Submit keepers to the commissioner — ${dates.keepers || "one week before the draft"}, four per team`,
+            "Pay the league fee before draft day, or the team auto-drafts",
+            "Submit a player for the shotgun draft — it can't be one of your keepers",
+            dates.draft ? `Draft: ${dates.draft}` : "Confirm the draft date and venue",
+            "Draft order is already set — see below",
+          ]
+        : [
+            `Set the draft date and venue`,
+            "Set the keeper deadline: one week before the draft",
+            "Collect league fees — due on or before draft day, or the team auto-drafts",
+            "Confirm the rule changes already voted in for this season (below)",
+            "Take new proposals, then vote — a proposer or co-signer must be in the room",
+            "Run the draft-slot selection in the order listed below",
+            "Confirm starting waiver budgets",
+          ]
+      ).map((item) => el("li", {}, el("span", {}, item)))
+    )
+  );
+
+  /* ---- what this season's meeting decided ---- */
+  const decidedCard = decided2026.length
+    ? el(
+        "div",
+        { class: "card" },
+        el("p", { class: "eyebrow" }, `Decided at the ${season} meeting`),
         el(
-          "li",
-          {},
-          el(
-            "span",
-            {},
-            item.text,
-            item.note ? el("span", { class: "minute-outcome" }, item.note) : null,
-            item.sub
-              ? el(
-                  "ul",
-                  { class: "rb-list", style: "margin:6px 0 0" },
-                  ...item.sub.map((line) => el("li", { style: "color:var(--text-dim)" }, line))
-                )
-              : null
+          "ul",
+          { class: "checklist" },
+          ...decided2026.map((item) =>
+            el(
+              "li",
+              {},
+              el(
+                "span",
+                {},
+                el("span", { style: "font-weight:650" }, item.text.replace(/[.\s]+$/, "")),
+                el("span", { style: "display:block;color:var(--text-dim);margin-top:3px" }, item.outcome)
+              )
+            )
           )
         )
       )
-    )
-  );
+    : null;
 
   /* ---- rule excerpts pulled straight from the by-laws ---- */
   const wanted = ["6.1", "6.2", "6.3", "4.2", "2.1", "2.3"];
@@ -333,6 +380,7 @@ try {
     // numbers you need in the room, then the archive to answer "what did we decide?".
     // Agenda and the two rule blocks run full width — their lines are long.
     el("div", { class: "section" }, agendaCard),
+    decidedCard ? el("div", { class: "section" }, decidedCard) : null,
     inEffectCard ? el("div", { class: "section" }, inEffectCard) : null,
     lockedCard ? el("div", { class: "section" }, lockedCard) : null,
     el("div", { class: "grid grid-2" }, orderCard, waiverCard),

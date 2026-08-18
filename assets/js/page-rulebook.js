@@ -1,10 +1,18 @@
-import { $, $$, el, load, fail } from "./app.js?v=bb7283a2";
+import { $, $$, el, load, fail } from "./app.js?v=d09c04f1";
 
 const rules = $("#rules");
 
 try {
-  const book = await load("rulebook.json");
+  const [book, archive] = await Promise.all([load("rulebook.json"), load("meetings.json").catch(() => null)]);
   const sections = book.sections || [];
+
+  // The by-laws carry a year in their title; anything voted at a later meeting amends
+  // this document without being in it. Surface those so nobody quotes a stale rule.
+  const bookYear = Number((book.source || "").match(/(20\d{2})/)?.[1]) || null;
+  const amendments = (archive?.meetings || [])
+    .filter((m) => bookYear && m.year > bookYear)
+    .flatMap((m) => m.items.filter((i) => i.outcome).map((i) => ({ ...i, year: m.year })))
+    .sort((a, b) => b.year - a.year);
 
   $("#toc").replaceChildren(
     el("p", { class: "eyebrow" }, "Contents"),
@@ -14,6 +22,45 @@ try {
   );
 
   rules.replaceChildren(
+    amendments.length
+      ? el(
+          "details",
+          { class: "card", style: "margin-bottom:18px" },
+          el(
+            "summary",
+            { style: "cursor:pointer;font-weight:700" },
+            `${amendments.length} decision${amendments.length === 1 ? "" : "s"} since this document was written`,
+            el("span", { class: "minute-outcome" }, `${bookYear} by-laws`)
+          ),
+          el(
+            "p",
+            { style: "font-size:.87rem;color:var(--text-dim);margin:10px 0 6px" },
+            "Voted at owners' meetings after these by-laws were drafted, so they override anything below. ",
+            el("a", { href: "meeting.html", style: "color:var(--accent)" }, "See the meeting record →")
+          ),
+          el(
+            "ul",
+            { class: "checklist" },
+            ...amendments.map((item) =>
+              el(
+                "li",
+                {},
+                el(
+                  "span",
+                  {},
+                  el(
+                    "span",
+                    { style: "font-weight:650" },
+                    item.text.replace(/[.\s]+$/, ""),
+                    el("span", { class: "minute-outcome" }, item.year)
+                  ),
+                  el("span", { style: "display:block;color:var(--text-dim);margin-top:3px" }, item.outcome)
+                )
+              )
+            )
+          )
+        )
+      : null,
     book.intro_html ? el("div", { class: "rb-body", html: book.intro_html }) : null,
     ...sections.map((s) =>
       el(
